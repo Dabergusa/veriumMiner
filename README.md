@@ -1,14 +1,11 @@
-CPUMiner-Multi
+veriumMiner
 ==============
 
-[![Build Status](https://travis-ci.org/tpruvot/cpuminer-multi.svg)](https://travis-ci.org/tpruvot/cpuminer-multi)
-
-This is a multi-threaded CPU miner,
-fork of [pooler](//github.com/pooler)'s cpuminer (see AUTHORS for list of contributors).
+This is a multi-threaded CPU miner for Verium using scrypt²,
+fork of [tpruvot](//github.com/tpruvot)'s cpuminer-multi (see AUTHORS for list of contributors).
 
 #### Table of contents
 
-* [Algorithms](#algorithms)
 * [Dependencies](#dependencies)
 * [Download](#download)
 * [Build](#build)
@@ -17,55 +14,7 @@ fork of [pooler](//github.com/pooler)'s cpuminer (see AUTHORS for list of contri
 * [Credits](#credits)
 * [License](#license)
 
-Algorithms
-==========
-#### Currently supported
- * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, ...)
- * ✓ __scrypt:N__
- * ✓ __scrypt-jane:N__
- * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, ...)
- * ✓ __axiom__ (Axiom Shabal-256 based MemoHash)
- * ✓ __bastion__ (Joincoin [J])
- * ✓ __blake__ (Saffron [SFR] Blake-256)
- * ✓ __blake2s__ (NevaCoin Blake2-S 256)
- * ✓ __bmw__ (Midnight [MDT] BMW-256)
- * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
- * ✓ __cryptonight-light__ (Aeon)
- * ✓ __dmd-gr__ (Diamond-Groestl)
- * ✓ __fresh__ (FreshCoin)
- * ✓ __groestl__ (Groestlcoin)
- * ✓ __lbry__ (LBRY Credits [LBC])
- * ✓ __lyra2RE__ (Lyrabar, Cryptocoin)
- * ✓ __lyra2REv2__ (VertCoin [VTC])
- * ✓ __myr-gr__ (Myriad-Groestl)
- * ✓ __neoscrypt__ (Feathercoin)
- * ✓ __nist5__ (MistCoin [MIC], TalkCoin [TAC], ...)
- * ✓ __pentablake__ (Joincoin)
- * ✓ __pluck__ (Supcoin [SUP])
- * ✓ __quark__ (Quarkcoin)
- * ✓ __qubit__ (MyriadCoin [MYR])
- * ✓ __skein__ (Skeincoin, Myriadcoin, Xedoscoin, ...)
- * ✓ __skein2__ (Woodcoin)
- * ✓ __s3__ (OneCoin)
- * ✓ __vanilla__ (Blake-256 8-rounds - double sha256 [VNL])
- * ✓ __x11evo__ (Revolver [XRE])
- * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin, ...)
- * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], ...)
- * ✓ __x14__ (X14, Webcoin [WEB])
- * ✓ __x15__ (RadianceCoin [RCE])
- * ✓ __yescrypt__ (GlobalBoostY [BSTY], Unitus [UIS])
- * ✓ __zr5__ (Ziftrcoin [ZRC])
 
-#### Implemented, but untested
- * ? hefty1 (Heavycoin)
- * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
- * ? luffa (Joincoin, Doomcoin)
- * ? shavite3 (INKcoin)
- * ? sib X11 + gost (SibCoin)
-
-#### Planned support for
- * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)
- 
 Dependencies
 ============
  * libcurl http://curl.haxx.se/libcurl/
@@ -76,9 +25,8 @@ Dependencies
 
 Download
 ========
- * Windows releases: https://github.com/tpruvot/cpuminer-multi/releases
- * Git tree:   https://github.com/tpruvot/cpuminer-multi
-   * Clone with `git clone https://github.com/tpruvot/cpuminer-multi`
+ * Git tree:   https://github.com/effectsToCause/veriumMiner
+ * Clone with `git clone https://github.com/effectsToCause/veriumMiner`
 
 Build
 =====
@@ -145,18 +93,6 @@ Protocols socks4a and socks5h, allowing remote name resolving, are also availabl
 
 If no protocol is specified, the proxy is assumed to be a HTTP proxy.  
 When the --proxy option is not used, the program honors the http_proxy and all_proxy environment variables.
-
-Donations
-=========
-Donations for the work done in this fork are accepted :
-
-Tanguy Pruvot :
-* BTC: `1FhDPLPpw18X4srecguG3MxJYe4a1JsZnd`
-* ZRC: `ZX6LmrCwphNgitxvDnf8TX6Tsegfxpeozx`
-
-Lucas Jones :
-* MRO: `472haywQKoxFzf7asaQ4XKBc2foAY4ezk8HiN63ifW4iAbJiLnfmJfhHSR9XmVKw2WYPnszJV9MEHj9Z5WMK9VCNHaGLDmJ`
-* BTC: `139QWoktddChHsZMWZFxmBva4FM96X2dhE`
 
 Credits
 =======

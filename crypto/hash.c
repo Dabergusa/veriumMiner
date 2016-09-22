@@ -7,15 +7,6 @@
 #include <string.h>
 
 #include "hash-ops.h"
-#include "c_keccak.h"
-
-void hash_permutation(union hash_state *state) {
-  keccakf((uint64_t*)state, 24);
-}
-
-void hash_process(union hash_state *state, const uint8_t *buf, int count) {
-  keccak1600(buf, count, (uint8_t*)state);
-}
 
 void cn_fast_hash(const void *data, int len, char *hash) {
   union hash_state state;

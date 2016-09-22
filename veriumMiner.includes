@@ -1,0 +1,16 @@
+.
+compat
+compat/bionic
+compat/curl-for-windows/curl/include/curl
+compat/curl-for-windows/openssl/config
+compat/curl-for-windows/openssl/openssl
+compat/curl-for-windows/openssl/openssl/crypto
+compat/curl-for-windows/openssl/openssl/crypto/sha
+compat/curl-for-windows/openssl/openssl/include/openssl
+compat/curl-for-windows/zlib
+compat/getopt
+compat/jansson
+compat/pthreads
+compat/sys
+crypto
+res
