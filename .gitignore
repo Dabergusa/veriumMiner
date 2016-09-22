@@ -17,6 +17,7 @@ configure
 configure.lineno
 depcomp
 missing
+*~
 install-sh
 stamp-h1
 cpuminer-config.h*
