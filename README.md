@@ -89,7 +89,7 @@ Run "cpuminer --help" to see options.
 ### HugePages (Linux only)
 Linux provides a nice optimization (+10% - +50% gains) that enables faster memory lookups.  These are 'HugePages'.  HugePages preallocate a bunch of memory for 'a specific use', in this case, for the miner.  
 
-To enable them (on Ubuntu 16.04), first check that you have `/proc/sys/vm/nr_hugepages` by doing `ls /proc/sys/vm` (you should see a folder `nr_hugepages`).  If you do, `echo "vm.nr_hugepages=[size]" > sudo tee --append /etc/sysctl.conf`, `sudo sysctl -p`.  You should see `vm.nr_hugepages=[size]` print out on the console.  If not, check your distro.  You may need to recompile your kernel to enable this.  
+To enable them (on Ubuntu 16.04), first check that you have `/proc/sys/vm/nr_hugepages` by doing `ls /proc/sys/vm` (you should see a folder `nr_hugepages`).  If you do, `echo "vm.nr_hugepages=[size]" > sudo tee --append /etc/sysctl.conf`, then `sudo sysctl -p`.  You should see `vm.nr_hugepages=[size]` print out on the console.  If not, check your distro.  You may need to recompile your kernel to enable this.  
 
 `[size]` = (the amount of memory each miner thread needs) / (2048 * 1024).  
 
@@ -99,6 +99,8 @@ How much RAM will be used per thread?
 * AVX2 (6way) : 768MB -> nr_hugepages = 384.
 * ARMv7 : 384MB -> nr_hugepages = 192.
 * ARMv8 : 384MB -> nr_hugepages = 192.
+
+For example, 4 threads on an SSE4, you'd type `echo "vm.nr_hugepages=768" > sudo tee --append /etc/sysctl.conf`
 
 Multiply that number by the number of threads, and you will have the size needed.  Note, you may not have enough RAM for this on ARM SoCs.  The miner should still work, but it will not be as optimal.
 
