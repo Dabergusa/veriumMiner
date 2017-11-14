@@ -417,6 +417,10 @@ void scrypt_core_3way(uint32_t *X, uint32_t *V, int N);
 
 #include <arm_neon.h>
 
+void scrypt_core(uint32_t *X, uint32_t *V, int N){
+	/* unimplemented */
+}
+
 static inline void scrypt_shuffle(uint32_t B[16])
 {
 	 uint32_t x0 = 	B[0]; 
