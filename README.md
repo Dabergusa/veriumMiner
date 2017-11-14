@@ -25,8 +25,8 @@ Dependencies
 
 Download
 ========
- * Git tree:   https://github.com/effectsToCause/veriumMiner
- * Clone with `git clone https://github.com/effectsToCause/veriumMiner`
+ * Git tree:   https://github.com/fireworm/veriumMiner
+ * Clone with `git clone https://github.com/fireworm/veriumMiner`
 
 Build
 =====
@@ -67,7 +67,9 @@ _OR_
    * make
 
 #### Architecture-specific notes:
- * ARM:
+ * ARMv8:
+   * Neon is enabled by default, ./build.sh should work fine.
+ * ARMv7:
    * No runtime CPU detection. The miner can take advantage of some instructions specific to ARMv5E and later processors, but the decision whether to use them is made at compile time, based on compiler-defined macros.
    * To use NEON instructions, add "-mfpu=neon" to CFLAGS.
  * x86:
@@ -84,6 +86,25 @@ Usage instructions
 ==================
 Run "cpuminer --help" to see options.
 
+### HugePages (Linux only)
+Linux provides a nice optimization (+10% - +50% gains) that enables faster memory lookups.  These are 'HugePages'.  HugePages preallocate a bunch of memory for 'a specific use', in this case, for the miner.  
+
+To enable them (on Ubuntu 16.04), first check that you have `/proc/sys/vm/nr_hugepages` by doing `ls /proc/sys/vm` (you should see a folder `nr_hugepages`).  If you do, `echo "vm.nr_hugepages=[size]" > sudo tee --append /etc/sysctl.conf`, `sudo sysctl -p`.  You should see `vm.nr_hugepages=[size]` print out on the console.  If not, check your distro.  You may need to recompile your kernel to enable this.  
+
+`[size]` = (the amount of memory each miner thread needs) / (2048 * 1024).  
+
+How much RAM will be used per thread?
+* SSE4 (3way) : 384MB -> nr_hugepages = 192.
+* AVX  (3way) : 384MB -> nr_hugepages = 192.
+* AVX2 (6way) : 768MB -> nr_hugepages = 384.
+* ARMv7 : 384MB -> nr_hugepages = 192.
+* ARMv8 : 384MB -> nr_hugepages = 192.
+
+Multiply that number by the number of threads, and you will have the size needed.  Note, you may not have enough RAM for this on ARM SoCs.  The miner should still work, but it will not be as optimal.
+
+How can you tell you have enough HugePages?
+You will not see `HugePages unavailable (##)` print out.  That means you have successfully allocated all needed HugePages for the miner.
+
 ### Connecting through a proxy
 
 Use the --proxy option.
@@ -99,6 +120,15 @@ Credits
 CPUMiner-multi was forked from pooler's CPUMiner, and has been started by Lucas Jones.
 * [tpruvot](https://github.com/tpruvot) added all the recent features and newer algorythmns
 * [Wolf9466](https://github.com/wolf9466) helped with Intel AES-NI support for CryptoNight
+* [FireWorm71](https://github.com/Fireworm71) helped with ARMv8 implementation, and memory optimizations.
+
+Donations
+=======
+This miner does not include any automatic donation code.  Please donate if you find this code profitable.  A suggestion is about 3.5 days of mining time per year (1%).  If you prefer to mine on my behalf, please run your miner with the miner args below.
+* FireWorm71:
+  * BTC: 1PPw16NEwMbGmobCcEyy9XhU5Uy7LTsRrZ
+  * VRM: VB99zk5BGzAFsQvrrQeBBnZNGZYgmRfmSy
+  * Mining Donations: `./cpuminer -o stratum+tcp://stratum.poolsloth.com:3333 -u fireworm.donations -p x`
 
 License
 =======

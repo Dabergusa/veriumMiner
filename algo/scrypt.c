@@ -32,8 +32,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+
+#ifdef __linux__
 #include <sys/mman.h>
 #include <errno.h>
+#endif
 
 static const uint32_t keypad[12] = {
 	0x80000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x00000280
@@ -1527,6 +1530,8 @@ bool printed = false;
 unsigned char *scrypt_buffer_alloc(int N)
 {
 	uint32_t size = scrypt_best_throughput() * 32 * (N + 1) * sizeof(uint32_t);
+
+#ifdef __linux__
 	unsigned char* m_memory = (unsigned char*)(mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0));
 	if (m_memory == MAP_FAILED)
 	{
@@ -1541,6 +1546,9 @@ unsigned char *scrypt_buffer_alloc(int N)
 		m_memory = (unsigned char*)malloc(size);
 	}
 	return m_memory;
+#else
+	return (unsigned char*)malloc(size);
+#endif
 }
 
 static void scrypt_1024_1_1_256(const uint32_t *input, uint32_t *output,
