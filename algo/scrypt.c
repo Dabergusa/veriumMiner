@@ -417,6 +417,11 @@ void scrypt_core_3way(uint32_t *X, uint32_t *V, int N);
 
 #include <arm_neon.h>
 
+#undef HAVE_SHA256_4WAY
+#define SCRYPT_MAX_WAYS 3
+#define HAVE_SCRYPT_3WAY 1
+#define scrypt_best_throughput() 3
+
 void scrypt_core(uint32_t *X, uint32_t *V, int N){
 	/* unimplemented */
 }
