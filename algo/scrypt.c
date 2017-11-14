@@ -1607,7 +1607,7 @@ static void scrypt_1024_1_1_256_4way(const uint32_t *input,
 }
 #endif /* HAVE_SHA256_4WAY */
 
-#ifdef HAVE_SCRYPT_3WAY || defined(__aarch64__)
+#ifdef HAVE_SCRYPT_3WAY
 
 static void scrypt_1024_1_1_256_3way(const uint32_t *input,
 	uint32_t *output, uint32_t *midstate, unsigned char *scratchpad, int N)
