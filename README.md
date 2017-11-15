@@ -11,6 +11,7 @@ fork of [tpruvot](//github.com/tpruvot)'s cpuminer-multi (see AUTHORS for list o
 * [Build](#build)
 * [Usage instructions](#usage-instructions)
 * [Donations](#donations)
+* [GCC 7.2](#gcc)
 * [Credits](#credits)
 * [License](#license)
 
@@ -25,8 +26,8 @@ Dependencies
 
 Download
 ========
- * Git tree:   https://github.com/fireworm/veriumMiner
- * Clone with `git clone https://github.com/fireworm/veriumMiner`
+ * Git tree:   https://github.com/fireworm71/veriumMiner
+ * Clone with `git clone https://github.com/fireworm71/veriumMiner`
 
 Build
 =====
@@ -89,23 +90,34 @@ Run "cpuminer --help" to see options.
 ### HugePages (Linux only)
 Linux provides a nice optimization (+10% - +50% gains) that enables faster memory lookups.  These are 'HugePages'.  HugePages preallocate a bunch of memory for 'a specific use', in this case, for the miner.  
 
-To enable them (on Ubuntu 16.04), first check that you have `/proc/sys/vm/nr_hugepages` by doing `ls /proc/sys/vm` (you should see a folder `nr_hugepages`).  If you do, `echo "vm.nr_hugepages=[size]" > sudo tee --append /etc/sysctl.conf`, then `sudo sysctl -p`.  You should see `vm.nr_hugepages=[size]` print out on the console.  If not, check your distro.  You may need to recompile your kernel to enable this.  
+To enable them (on Ubuntu 16.04), first check that you have `/proc/sys/vm/nr_hugepages` by doing `ls /proc/sys/vm` (you should see `nr_hugepages` in the print out).  
 
-`[size]` = (the amount of memory each miner thread needs) / (2048 * 1024).  
+You can allocate huge pages by doing one of two things:
+1) `sudo nano /etc/sysctl.conf`, scroll to the bottom, and type in `vm.nr_hugepages=size`, then `Ctrl+O`, then `[Enter]`, then `Ctrl+X`.
+2) `echo "vm.nr_hugepages=size" > sudo tee --append /etc/sysctl.conf`.
 
-How much RAM will be used per thread?
-* SSE4 (3way) : 384MB -> nr_hugepages = 192.
-* AVX  (3way) : 384MB -> nr_hugepages = 192.
-* AVX2 (6way) : 768MB -> nr_hugepages = 384.
-* ARMv7 : 384MB -> nr_hugepages = 192.
-* ARMv8 : 384MB -> nr_hugepages = 192.
+After either, do `sudo sysctl -p`.  You should see `vm.nr_hugepages=size` print out on the console.  If not, check your distro.  You may need to recompile your kernel to enable this.  You can also verify that memory is allocated by running `free` and seeing that you now have a ton of memory allocated, but aren't running anything that's using it.
 
-For example, 4 threads on an SSE4, you'd type `echo "vm.nr_hugepages=768" > sudo tee --append /etc/sysctl.conf`
+`size` = (the amount of memory each miner thread needs) / (2048 * 1024).  
 
-Multiply that number by the number of threads, and you will have the size needed.  Note, you may not have enough RAM for this on ARM SoCs.  The miner should still work, but it will not be as optimal.
+How much memory is be used per thread?
+* 1way : 128MB -> nr_hugepages = 65.
+* SSE4 (3way) : 384MB -> nr_hugepages = 193.
+* AVX  (3way) : 384MB -> nr_hugepages = 193.
+* AVX2 (6way) : 768MB -> nr_hugepages = 386.
+* ARMv7 (3way) : 384MB -> nr_hugepages = 193.
+* ARMv8 (3way) : 384MB -> nr_hugepages = 193.
+
+For example, 4 threads on an SSE4, you'd type `echo "vm.nr_hugepages=772" > sudo tee --append /etc/sysctl.conf`
+
+Multiply that number by the number of threads, and you will have the size needed.  Note, you may not have enough RAM for this on ARM SoCs.  The miner should still work, but it will not be as optimal. 
 
 How can you tell you have enough HugePages?
 You will not see `HugePages unavailable (##)` print out.  That means you have successfully allocated all needed HugePages for the miner.
+
+If for some reason you want to remove HugePages (or adjust the size):
+
+`sudo nano /etc/sysctl.conf`, scroll to the bottom, and remove / edit the line `vm.nr_hugepages=size`, `Ctrl+O`, `[Enter]`, `Ctrl+X`.  Then, like before, `sudo sysctl -p`.  Note that you can also reboot and this will cause HugePages to allocate / deallocate.
 
 ### Connecting through a proxy
 
@@ -116,6 +128,23 @@ Protocols socks4a and socks5h, allowing remote name resolving, are also availabl
 
 If no protocol is specified, the proxy is assumed to be a HTTP proxy.  
 When the --proxy option is not used, the program honors the http_proxy and all_proxy environment variables.
+
+GCC
+=======
+Some people have reported increases by using GCC 7.
+
+To build and install GCC 7.2 on Ubuntu do the following:
+* `apt-get -y install unzip flex`
+* `wget https://github.com/gcc-mirror/gcc/archive/gcc-7_2_0-release.zip`
+* `unzip gcc-7_2_0-release.zip`
+* `cd gcc-7_2_0-release`
+* `sudo ./contrib/download_prerequisites`
+* `mkdir build`
+* `cd build`
+* `../configure `
+* `make -j 8`
+* `make install`
+
 
 Credits
 =======
@@ -128,9 +157,9 @@ Donations
 =======
 This miner does not include any automatic donation code.  Please donate if you find this code profitable.  A suggestion is about 3.5 days of mining time per year (1%).  If you prefer to mine on my behalf, please run your miner with the miner args below.
 * FireWorm71:
+  * Mining Donations: `./cpuminer -o stratum+tcp://stratum.poolsloth.com:3333 -u fireworm.donations -p x`
   * BTC: 1PPw16NEwMbGmobCcEyy9XhU5Uy7LTsRrZ
   * VRM: VB99zk5BGzAFsQvrrQeBBnZNGZYgmRfmSy
-  * Mining Donations: `./cpuminer -o stratum+tcp://stratum.poolsloth.com:3333 -u fireworm.donations -p x`
 
 License
 =======
