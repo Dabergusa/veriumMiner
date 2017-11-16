@@ -1595,7 +1595,7 @@ bool rpc2_job_decode(const json_t *job, struct work *work)
 		if(rpc2_target != target) {
 			double hashrate = 0.0;
 			pthread_mutex_lock(&stats_lock);
-			for (int i = 0; i < opt_n_threads; i++)
+			for (int i = 0; i < opt_n_total_threads; i++)
 				hashrate += thr_hashrates[i];
 			pthread_mutex_unlock(&stats_lock);
 			double difficulty = (((double) 0xffffffff) / target);
@@ -1889,7 +1889,7 @@ static bool stratum_benchdata(json_t *result, json_t *params, int thr_id)
 	json_object_set_new(val, "power", json_integer(0));
 	json_object_set_new(val, "khashes", json_real((double)global_hashrate / 1000.0));
 	json_object_set_new(val, "intensity", json_real(opt_priority));
-	json_object_set_new(val, "throughput", json_integer(opt_n_threads));
+	json_object_set_new(val, "throughput", json_integer(opt_n_total_threads));
 	json_object_set_new(val, "client", json_string(PACKAGE_NAME "/" PACKAGE_VERSION));
 	json_object_set_new(val, "os", json_string(os));
 	json_object_set_new(val, "driver", json_string(compiler));

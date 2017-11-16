@@ -115,7 +115,9 @@ static enum algos opt_algo = ALGO_SCRYPT;
 static int opt_scrypt_n = 1048576;
 static int opt_pluck_n = 128;
 static unsigned int opt_nfactor = 6;
-int opt_n_threads = 0;
+int opt_n_default_threads = 0;
+int opt_n_1_threads = 0;
+int opt_n_total_threads = 0;
 int64_t opt_affinity = -1L;
 int opt_priority = 0;
 int num_cpus;
@@ -241,9 +243,10 @@ static char const short_options[] =
 #ifdef HAVE_SYSLOG_H
 	"S"
 #endif
-	"a:b:Bc:CDf:hm:n:p:Px:qr:R:s:t:T:o:u:O:V";
+	"1:a:b:Bc:CDf:hm:n:p:Px:qr:R:s:t:T:o:u:O:V";
 
 static struct option const options[] = {
+	{ "oneways", 1, NULL, '1' },
 	{ "algo", 1, NULL, 'a' },
 	{ "api-bind", 1, NULL, 'b' },
 	{ "api-remote", 0, NULL, 1030 },
@@ -807,7 +810,7 @@ static int share_result(int result, struct work *work, const char *reason)
 
 	hashrate = 0.;
 	pthread_mutex_lock(&stats_lock);
-	for (i = 0; i < opt_n_threads; i++)
+	for (i = 0; i < opt_n_total_threads; i++)
 		hashrate += thr_hashrates[i];
 	result ? accepted_count++ : rejected_count++;
 	pthread_mutex_unlock(&stats_lock);
@@ -1525,11 +1528,13 @@ static void *miner_thread(void *userdata)
 	int thr_id = mythr->id;
 	struct work work;
 	uint32_t max_nonce;
-	uint32_t end_nonce = 0xffffffffU / opt_n_threads * (thr_id + 1) - 0x20;
+	uint32_t end_nonce = 0xffffffffU / opt_n_total_threads * (thr_id + 1) - 0x20;
 	time_t firstwork_time = 0;
 	unsigned char *scratchbuf = NULL;
 	char s[16];
 	int i;
+
+	printf("thr %d\n", thr_id);
 
 	memset(&work, 0, sizeof(work));
 
@@ -1572,7 +1577,7 @@ static void *miner_thread(void *userdata)
 
 	/* Cpu thread affinity */
 	if (num_cpus > 1) {
-		if (opt_affinity == -1 && opt_n_threads > 1) {
+		if (opt_affinity == -1 && opt_n_total_threads > 1) {
 			if (opt_debug)
 				applog(LOG_DEBUG, "Binding thread %d to cpu %d (mask %x)", thr_id,
 						thr_id % num_cpus, (1 << (thr_id % num_cpus)));
@@ -1586,7 +1591,7 @@ static void *miner_thread(void *userdata)
 	}
 
 	if (opt_algo == ALGO_SCRYPT) {
-		scratchbuf = scrypt_buffer_alloc(opt_scrypt_n);
+		scratchbuf = scrypt_buffer_alloc(opt_scrypt_n, mythr->forceThroughput);
 		if (!scratchbuf) {
 			applog(LOG_ERR, "scrypt buffer allocation failed");
 			pthread_mutex_lock(&applog_lock);
@@ -1651,9 +1656,9 @@ static void *miner_thread(void *userdata)
 			work_free(&work);
 			work_copy(&work, &g_work);
 			nonceptr = (uint32_t*) (((char*)work.data) + nonce_oft);
-			*nonceptr = 0xffffffffU / opt_n_threads * thr_id;
+			*nonceptr = 0xffffffffU / opt_n_total_threads * thr_id;
 			if (opt_randomize)
-				nonceptr[0] += ((rand()*4) & UINT32_MAX) / opt_n_threads;
+				nonceptr[0] += ((rand()*4) & UINT32_MAX) / opt_n_total_threads;
 		} else
 			++(*nonceptr);
 		pthread_mutex_unlock(&g_work_lock);
@@ -1729,7 +1734,7 @@ static void *miner_thread(void *userdata)
 		/* scan nonces for a proof-of-work hash */
 		switch (opt_algo) {
 		case ALGO_SCRYPT:
-			rc = scanhash_scrypt(thr_id, &work, max_nonce, &hashes_done, scratchbuf, opt_scrypt_n);
+			rc = scanhash_scrypt(thr_id, &work, max_nonce, &hashes_done, scratchbuf, opt_scrypt_n, mythr->forceThroughput);
 			break;
 		default:
 			/* should never happen */
@@ -1745,11 +1750,11 @@ static void *miner_thread(void *userdata)
                 hashes_done / (diff.tv_sec + diff.tv_usec * 1e-6);
 			pthread_mutex_unlock(&stats_lock);
 		}
-        if (thr_id == opt_n_threads - 1) {
+        if (thr_id == opt_n_total_threads - 1) {
 			double hashrate = 0.;
-			for (i = 0; i < opt_n_threads && thr_hashrates[i]; i++)
+			for (i = 0; i < opt_n_total_threads && thr_hashrates[i]; i++)
 				hashrate += thr_hashrates[i];
-			if (i == opt_n_threads) {
+			if (i == opt_n_total_threads) {
 				switch(opt_algo) {
 				default:
                     sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate * 60);
@@ -1787,7 +1792,7 @@ void restart_threads(void)
 {
 	int i;
 
-	for (i = 0; i < opt_n_threads; i++)
+	for (i = 0; i < opt_n_total_threads; i++)
 		work_restart[i].restart = 1;
 }
 
@@ -2176,6 +2181,7 @@ void parse_arg(int key, char *arg)
 	int v, i;
 	uint64_t ul;
 	double d;
+	//printf("%d - %c - arg\n", key, key);
 
 	switch(key) {
 		if (!opt_nfactor && opt_algo == ALGO_SCRYPT)
@@ -2275,8 +2281,16 @@ void parse_arg(int key, char *arg)
 		v = atoi(arg);
 		if (v < 0 || v > 9999) /* sanity check */
 			show_usage_and_exit(1);
-		opt_n_threads = v;
+		opt_n_default_threads = v;
 		break;
+	case '1':
+		printf("one found %s\n", arg);
+		v = atoi(arg);
+		if (v < 0 || v > 9999) /* sanity check */
+			show_usage_and_exit(1);
+		opt_n_1_threads = v;
+		printf("one found1\n");
+		break;		
 	case 'u':
 		free(rpc_user);
 		rpc_user = strdup(arg);
@@ -2541,6 +2555,7 @@ static void parse_cmdline(int argc, char *argv[])
 			argv[0], argv[optind]);
 		show_usage_and_exit(1);
 	}
+	printf("cmdline parsed\n");
 }
 
 #ifndef WIN32
@@ -2639,10 +2654,12 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (!opt_n_threads)
-		opt_n_threads = num_cpus;
-	if (!opt_n_threads)
-		opt_n_threads = 1;
+	opt_n_total_threads = opt_n_default_threads + opt_n_1_threads;
+
+	if (!opt_n_total_threads)
+		opt_n_total_threads = num_cpus;
+	if (!opt_n_total_threads)
+		opt_n_total_threads = 1;
 
 	if (!opt_benchmark && !rpc_url) {
 		fprintf(stderr, "%s: no URL supplied\n", argv[0]);
@@ -2729,20 +2746,20 @@ int main(int argc, char *argv[]) {
 		openlog("cpuminer", LOG_PID, LOG_USER);
 #endif
 
-	work_restart = (struct work_restart*) calloc(opt_n_threads, sizeof(*work_restart));
+	work_restart = (struct work_restart*) calloc(opt_n_total_threads, sizeof(*work_restart));
 	if (!work_restart)
 		return 1;
 
-	thr_info = (struct thr_info*) calloc(opt_n_threads + 4, sizeof(*thr));
+	thr_info = (struct thr_info*) calloc(opt_n_total_threads + 4, sizeof(*thr));
 	if (!thr_info)
 		return 1;
 
-	thr_hashrates = (double *) calloc(opt_n_threads, sizeof(double));
+	thr_hashrates = (double *) calloc(opt_n_total_threads, sizeof(double));
 	if (!thr_hashrates)
 		return 1;
 
 	/* init workio thread info */
-	work_thr_id = opt_n_threads;
+	work_thr_id = opt_n_total_threads;
 	thr = &thr_info[work_thr_id];
 	thr->id = work_thr_id;
 	thr->q = tq_new();
@@ -2761,7 +2778,7 @@ int main(int argc, char *argv[]) {
 	/* ESET-NOD32 Detects these 2 thread_create... */
 	if (want_longpoll && !have_stratum) {
 		/* init longpoll thread info */
-		longpoll_thr_id = opt_n_threads + 1;
+		longpoll_thr_id = opt_n_total_threads + 1;
 		thr = &thr_info[longpoll_thr_id];
 		thr->id = longpoll_thr_id;
 		thr->q = tq_new();
@@ -2777,7 +2794,7 @@ int main(int argc, char *argv[]) {
 	}
 	if (want_stratum) {
 		/* init stratum thread info */
-		stratum_thr_id = opt_n_threads + 2;
+		stratum_thr_id = opt_n_total_threads + 2;
 		thr = &thr_info[stratum_thr_id];
 		thr->id = stratum_thr_id;
 		thr->q = tq_new();
@@ -2796,7 +2813,7 @@ int main(int argc, char *argv[]) {
 
 	if (opt_api_listen) {
 		/* api thread */
-		api_thr_id = opt_n_threads + 3;
+		api_thr_id = opt_n_total_threads + 3;
 		thr = &thr_info[api_thr_id];
 		thr->id = api_thr_id;
 		thr->q = tq_new();
@@ -2810,14 +2827,21 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* start mining threads */
-	for (i = 0; i < opt_n_threads; i++) {
+	for (i = 0; i < opt_n_total_threads; i++) {
 		thr = &thr_info[i];
 
 		thr->id = i;
 		thr->q = tq_new();
 		if (!thr->q)
 			return 1;
-
+		if (i >= opt_n_default_threads)
+		{
+			thr->forceThroughput = 1;	
+		}
+		else
+		{
+			thr->forceThroughput = -1;
+		}
 		err = thread_create(thr, miner_thread);
 		if (err) {
 			applog(LOG_ERR, "thread %d create failed", i);
@@ -2827,7 +2851,7 @@ int main(int argc, char *argv[]) {
 
 	applog(LOG_INFO, "%d miner threads started, "
 		"using '%s' algorithm.",
-		opt_n_threads,
+		opt_n_total_threads,
 		algo_names[opt_algo]);
 
 	/* main loop - simply wait for workio thread to exit */
