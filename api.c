@@ -100,7 +100,7 @@ extern uint32_t solved_count;
 extern uint32_t accepted_count;
 extern uint32_t rejected_count;
 
-#define cpu_threads opt_n_total_threads
+#define cpu_threads opt_n_threads
 
 #define USE_MONITORING
 extern float cpu_temp(int);
@@ -111,7 +111,7 @@ extern int cpu_fanpercent(void);
 
 static void cpustatus(int thr_id)
 {
-	if (thr_id >= 0 && thr_id < opt_n_total_threads) {
+	if (thr_id >= 0 && thr_id < opt_n_threads) {
 		struct cpu_info *cpu = &thr_info[thr_id].cpu;
 		char buf[512]; *buf = '\0';
 
@@ -153,7 +153,7 @@ static char *getsummary(char *params)
 		"ACCMN=%.3f;DIFF=%.6f;TEMP=%.1f;FAN=%d;FREQ=%d;"
 		"UPTIME=%.0f;TS=%u|",
 		PACKAGE_NAME, PACKAGE_VERSION, APIVERSION,
-		algo, opt_n_total_threads, (double)global_hashrate / 1000.0,
+		algo, opt_n_threads, (double)global_hashrate / 1000.0,
 		solved_count, accepted_count, rejected_count, accps, net_diff > 0. ? net_diff : stratum_diff,
 		cpu.cpu_temp, cpu.cpu_fan, cpu.cpu_clock,
 		uptime, (uint32_t) ts);
@@ -166,7 +166,7 @@ static char *getsummary(char *params)
 static char *getthreads(char *params)
 {
 	*buffer = '\0';
-	for (int i = 0; i < opt_n_total_threads; i++)
+	for (int i = 0; i < opt_n_threads; i++)
 		cpustatus(i);
 	return buffer;
 }
