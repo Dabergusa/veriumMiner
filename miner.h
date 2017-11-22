@@ -285,7 +285,7 @@ extern bool opt_protocol;
 extern bool opt_showdiff;
 extern bool opt_quiet;
 extern bool opt_redirect;
-extern int opt_priority;
+extern int opt_default_priority;
 extern int opt_timeout;
 extern bool want_longpoll;
 extern bool have_longpoll;
