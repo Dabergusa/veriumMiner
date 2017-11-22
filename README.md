@@ -160,6 +160,7 @@ This miner does not include any automatic donation code.  Please donate if you f
   * Mining Donations: `./cpuminer -o stratum+tcp://stratum.poolsloth.com:3333 -u fireworm.donations -p x`
   * BTC: 1PPw16NEwMbGmobCcEyy9XhU5Uy7LTsRrZ
   * VRM: VB99zk5BGzAFsQvrrQeBBnZNGZYgmRfmSy
+  * VRC: VYy4v95EfkJy7QnPSwfK7fhgWPM4RujbPf
 
 License
 =======
