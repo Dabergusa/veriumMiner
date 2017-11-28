@@ -413,7 +413,7 @@ void scrypt_core(uint32_t *X, uint32_t *V, int N);
 void scrypt_core_3way(uint32_t *X, uint32_t *V, int N);
 #endif
 
-#elif defined(__aarchssss64__)
+#elif defined(__aarch64__)
 
 #include <arm_neon.h>
 
