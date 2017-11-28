@@ -228,9 +228,9 @@ int scanhash_quark(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *
 void init_quarkhash_contexts();
 int scanhash_qubit(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_sha256d(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
-unsigned char *scrypt_buffer_alloc(int N);
+unsigned char *scrypt_buffer_alloc(int N, int forceThroughput);
 int scanhash_scrypt(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done,
-					unsigned char *scratchbuf, uint32_t N);
+					unsigned char *scratchbuf, uint32_t N, int forceThroughput);
 int scanhash_scryptjane(int Nfactor, int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_sib(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_skein(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
@@ -271,6 +271,7 @@ struct thr_info {
 	pthread_attr_t attr;
 	struct thread_q	*q;
 	struct cpu_info cpu;
+	int forceThroughput;
 };
 
 struct work_restart {
@@ -284,7 +285,7 @@ extern bool opt_protocol;
 extern bool opt_showdiff;
 extern bool opt_quiet;
 extern bool opt_redirect;
-extern int opt_priority;
+extern int opt_default_priority;
 extern int opt_timeout;
 extern bool want_longpoll;
 extern bool have_longpoll;
@@ -303,7 +304,7 @@ extern struct thr_info *thr_info;
 extern int longpoll_thr_id;
 extern int stratum_thr_id;
 extern int api_thr_id;
-extern int opt_n_threads;
+extern int opt_n_total_threads;
 extern int num_cpus;
 extern struct work_restart *work_restart;
 extern uint32_t opt_work_size;
