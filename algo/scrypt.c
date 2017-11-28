@@ -1771,7 +1771,13 @@ static inline void scrypt_core(uint32_t *X, uint32_t *V, int N)
 bool printed = false;
 unsigned char *scrypt_buffer_alloc(int N, int forceThroughput)
 {
-	uint32_t size = (forceThroughput == -1 ? scrypt_best_throughput() : forceThroughput) * 32 * (N + 1) * sizeof(uint32_t);
+	uint32_t throughput = (forceThroughput == -1 ? scrypt_best_throughput() : forceThroughput);
+	if (opt_ryzen_1x) {
+		// force throughput to be 3 (aka AVX) instead of AVX2.
+		throughput = 3;
+	}
+
+	uint32_t size = throughput * 32 * (N + 1) * sizeof(uint32_t);
 
 #ifdef __linux__
 	unsigned char* m_memory = (unsigned char*)(mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0));
@@ -1987,6 +1993,11 @@ extern int scanhash_scrypt(int thr_id, struct work *work, uint32_t max_nonce, ui
 	uint32_t n = pdata[19] - 1;
 	const uint32_t Htarg = ptarget[7];
 	int throughput = scrypt_best_throughput();
+	if (opt_ryzen_1x) {
+		// force throughput to be 3 (aka AVX) instead of AVX2.
+		throughput = 3;
+	}
+
 	int i;
 	
 #ifdef HAVE_SHA256_4WAY

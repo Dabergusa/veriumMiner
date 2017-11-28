@@ -297,6 +297,7 @@ extern bool opt_stratum_stats;
 extern char *opt_cert;
 extern char *opt_proxy;
 extern long opt_proxy_type;
+extern bool opt_ryzen_1x;
 extern bool use_syslog;
 extern bool use_colors;
 extern pthread_mutex_t applog_lock;

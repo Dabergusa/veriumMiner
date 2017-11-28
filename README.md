@@ -42,7 +42,7 @@ _OR_
  * make
 
 #### Note for Debian/Ubuntu users:
- * apt-get install automake autoconf pkg-config libcurl4-openssl-dev libjansson-dev libssl-dev libgmp-dev zlib1g-dev
+ * `apt-get install automake autoconf pkg-config libcurl4-openssl-dev libjansson-dev libssl-dev libgmp-dev zlib1g-dev`
 
 #### Notes for AIX users:
  * To build a 64-bit binary, export OBJECT_MODE=64
@@ -119,6 +119,23 @@ If for some reason you want to remove HugePages (or adjust the size):
 
 `sudo nano /etc/sysctl.conf`, scroll to the bottom, and remove / edit the line `vm.nr_hugepages=size`, `Ctrl+O`, `[Enter]`, `Ctrl+X`.  Then, like before, `sudo sysctl -p`.  Note that you can also reboot and this will cause HugePages to allocate / deallocate.
 
+### Oneways, cpu affinity.
+
+You can now specify a number of 'oneway' threads to acompany your 'default way' threads.  Default way is determined by your CPU instruction set.
+
+'-1 n' will specify the number of oneway threads to spawn.  You can also use `--oneways n`.  Some folks (on arm especially) see perf gains due to the implementation.  Additionally, there are new options to help control affinity for these threads and 'default' way threads too.  `--cpu-affinity-stride N`, `--cpu-affinity-default-index N`, `--cpu-affinity-oneway-index N`, and `--cpu-priority-oneway 0-5`
+
+Affinity stride works by saying how many cpus should be skipped before assigning the thread to it.  So, if you have 8 cpu's and set 'stride' to 3, you will start with CPU (0 + 3 * 0), then CPU (0 + 3 * 1), then CPU (0 + 3 * 2),  aka  CPU's 0, 3, 6.  'default' index is the starting index ('0' in the example) for the number of `-t` threads.  'oneway-index' is the starting index for oneway `-1` threads.
+
+Play around with them, and pass `-D` to get some debug output.
+
+e.g, 'Bind oneways to odd threads, 'defaults' to even threads: `./cpuminer ... -t 4 -1 4 --cpu-affinity-stride 2 --cpu-affinity-default-index 0 --cpu-affinity-oneway-index 1`
+e.g.2, 'Bind oneways to the last 4 cpu's after the defaults' `./cpuminer ... -t 4 -1 4 --cpu-affinity-stride 1 --cpu-affinity-default-index 0 --cpu-affinity-oneway-index 4` (edited)
+
+# RYZEN USERS pass `--ryzen`.
+
+Ryzen's implementation of AVX2 is ... subpar.  Please pass `--ryzen` on the commandline to default to the AVX implementation.  Users reported ~25% gains.
+
 ### Connecting through a proxy
 
 Use the --proxy option.
@@ -131,17 +148,16 @@ When the --proxy option is not used, the program honors the http_proxy and all_p
 
 GCC
 =======
-Some people have reported increases by using GCC 7.
+Some people have reported increases by using GCC 7.2.  Please note, this will replace your existing GCC installation, which may become unrecoverable if any errors occur in the `make` process.
 
 To build and install GCC 7.2 on Ubuntu do the following:
 * `apt-get -y install unzip flex`
 * `wget https://github.com/gcc-mirror/gcc/archive/gcc-7_2_0-release.zip`
 * `unzip gcc-7_2_0-release.zip`
-* `cd gcc-7_2_0-release`
+* `cd gcc-gcc-7_2_0-release`
 * `sudo ./contrib/download_prerequisites`
-* `mkdir build`
-* `cd build`
-* `../configure `
+* `mkdir build && cd build`
+* `../configure --enable-languages=c,c++ --disable-multilib`
 * `make -j 8`
 * `make install`
 

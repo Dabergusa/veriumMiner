@@ -125,6 +125,7 @@ int opt_affinity_stride = 1;
 int opt_affinity_default_index = 0;
 int opt_affinity_oneway_index = 0;
 int opt_oneway_priority = 0;
+bool opt_ryzen_1x = false;
 int* thread_affinty_array = NULL;
 int num_cpus;
 char *rpc_url;
@@ -200,6 +201,7 @@ Options:\n\
       --cert=FILE       certificate for mining server using SSL\n\
   -x, --proxy=[PROTOCOL://]HOST[:PORT]  connect through a proxy\n\
   -t, --threads=N       number of miner threads (default: number of processors)\n\
+  -1, --oneways=N       number of miner threads that are forced to 'oneway' (default: 0)\n\
   -r, --retries=N       number of times to retry if a network call fails\n\
                           (default: retry indefinitely)\n\
   -R, --retry-pause=N   time to pause between retries, in seconds (default: 30)\n\
@@ -234,11 +236,23 @@ Options:\n\
       --cputest         debug hashes from cpu algorithms\n\
       --cpu-affinity    set process affinity to cpu core(s), mask 0x3 for cores 0 and 1\n\
       --cpu-priority    set process priority (default: 0 idle, 2 normal to 5 highest)\n\
+\n\
+      --cpu-affinity-stride N  \n\
+            how many processors to skip when assigining affinity based on indicies\n\
+             cannot be used with '--cpu-affinity'  (default: 1) See README.md for more details.\n\
+      --cpu-affinity-default-index N \n\
+            which cpu to start affinity for 'default' way threads (0-based). (default: 0) See README.md for more details.\n\
+      --cpu-affinity-oneway-index N \n\
+            which cpu to start affinity for 'default' way threads (0-based). (default: [After default threads]) See README.md for more details.\n\
+      --cpu-priority-oneway 0-5\n\
+            what priority oneway threads have (0 lowest, 5 highest) (default: 0)\n\
+\n\
   -b, --api-bind        IP/Port for the miner API (default: 127.0.0.1:4048)\n\
       --api-remote      Allow remote control\n\
       --max-temp=N      Only mine if cpu temp is less than specified value (linux)\n\
       --max-rate=N[KMG] Only mine if net hashrate is less than specified value\n\
       --max-diff=N      Only mine if net difficulty is less than specified value\n\
+      --ryzen           Force AVX, and disable AVX2.  Ryzen 1*** is much faster.\n\
   -c, --config=FILE     load a JSON-format configuration file\n\
   -V, --version         display version information and exit\n\
   -h, --help            display this help text and exit\n\
@@ -269,6 +283,7 @@ static struct option const options[] = {
 	{ "cpu-affinity-stride", 1, NULL, 1050 },
 	{ "cpu-affinity-default-index", 1, NULL, 1051 },
 	{ "cpu-affinity-oneway-index", 1, NULL, 1052 },
+	{ "ryzen", 0, NULL, 2000 },
 	{ "no-color", 0, NULL, 1002 },
 	{ "debug", 0, NULL, 'D' },
 	{ "diff-factor", 1, NULL, 'f' },
@@ -2583,6 +2598,9 @@ void parse_arg(int key, char *arg)
 		opt_affinity_oneway_index = v;
 		use_affinity_mask = -1;
 		break;	
+	case 2000: // "ryzen"
+		opt_ryzen_1x = true;
+		break;
 	case 'V':
 		show_version_and_exit();
 	case 'h':
