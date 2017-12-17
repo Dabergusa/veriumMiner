@@ -127,6 +127,42 @@ _sha256_transform:
 	stmia	r3, {r4-r11}
 	b	sha256_transform_extend
 
+
+#if defined(__ARM_ARCH_5__) || defined(__ARM_ARCH_5E__) || \
+	defined(__ARM_ARCH_5TE__) || defined(__ARM_ARCH_5TEJ__)
+
+.macro bswap rd, rn
+	eor	r12, \rn, \rn, ror #16
+	bic	r12, r12, #0x00ff0000
+	mov	\rd, \rn, ror #8
+	eor	\rd, \rd, r12, lsr #8
+.endm
+
+sha256_transform_swap:
+	ldmia	r1!, {r4-r11}
+	bswap	r4, r4
+	bswap	r5, r5
+	bswap	r6, r6
+	bswap	r7, r7
+	bswap	r8, r8
+	bswap	r9, r9
+	bswap	r10, r10
+	bswap	r11, r11
+	stmia	sp, {r4-r11}
+	add	r3, sp, #8*4
+	ldmia	r1, {r4-r11}
+	bswap	r4, r4
+	bswap	r5, r5
+	bswap	r6, r6
+	bswap	r7, r7
+	bswap	r8, r8
+	bswap	r9, r9
+	bswap	r10, r10
+	bswap	r11, r11
+	stmia	r3, {r4-r11}
+
+#else
+
 sha256_transform_swap:
 	ldmia	r1!, {r4-r11}
 	rev	r4, r4
@@ -150,6 +186,8 @@ sha256_transform_swap:
 	rev	r11, r11
 	stmia	r3, {r4-r11}
 	
+#endif
+
 sha256_transform_extend:
 	add	r12, sp, #9*4
 	ldr	r11, [sp, #0*4]
