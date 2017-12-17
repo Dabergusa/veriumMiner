@@ -127,34 +127,27 @@ _sha256_transform:
 	stmia	r3, {r4-r11}
 	b	sha256_transform_extend
 
-.macro bswap rd, rn
-	eor	r12, \rn, \rn, ror #16
-	bic	r12, r12, #0x00ff0000
-	mov	\rd, \rn, ror #8
-	eor	\rd, \rd, r12, lsr #8
-.endm
-
 sha256_transform_swap:
 	ldmia	r1!, {r4-r11}
-	bswap	r4, r4
-	bswap	r5, r5
-	bswap	r6, r6
-	bswap	r7, r7
-	bswap	r8, r8
-	bswap	r9, r9
-	bswap	r10, r10
-	bswap	r11, r11
+	rev	r4, r4
+	rev	r5, r5
+	rev	r6, r6
+	rev	r7, r7
+	rev	r8, r8
+	rev	r9, r9
+	rev	r10, r10
+	rev	r11, r11
 	stmia	sp, {r4-r11}
 	add	r3, sp, #8*4
 	ldmia	r1, {r4-r11}
-	bswap	r4, r4
-	bswap	r5, r5
-	bswap	r6, r6
-	bswap	r7, r7
-	bswap	r8, r8
-	bswap	r9, r9
-	bswap	r10, r10
-	bswap	r11, r11
+	rev	r4, r4
+	rev	r5, r5
+	rev	r6, r6
+	rev	r7, r7
+	rev	r8, r8
+	rev	r9, r9
+	rev	r10, r10
+	rev	r11, r11
 	stmia	r3, {r4-r11}
 	
 sha256_transform_extend:
@@ -243,9 +236,8 @@ _sha256d_ms:
 	stmfd	sp!, {r4-r11, lr}
 	sub	sp, sp, #64*4
 	
-	cmp	r0, r0
-	
 	ldr	lr, [r1, #3*4]
+        cmp     r0, r0
 	ldr	r6, [r1, #18*4]
 	ldr	r7, [r1, #19*4]
 	
@@ -406,15 +398,15 @@ sha256d_ms_k_over:
 	add	r5, r5, r12
 	add	r6, r6, lr
 	stmia	sp, {r4-r6}
-	ldmia	r2, {r3, r4, r5, r6, r12}
 	add	lr, sp, #3*4
+	ldmia   r2, {r3, r4, r5, r6, r12}
 	add	r7, r7, r3
 	add	r8, r8, r4
 	add	r9, r9, r5
 	add	r10, r10, r6
 	add	r11, r11, r12
+        stmia   lr!, {r7-r11}
 	add	r12, sp, #18*4
-	stmia	lr!, {r7-r11}
 	
 	ldmia	r12, {r4-r11}
 	str	r4,  [r1, #18*4]
@@ -440,8 +432,8 @@ sha256d_ms_k_over:
 	movs	r1, sp
 	ldr	r4, [sp, #0*4]
 	
-	ldr	r11, [sp, #2*4]
 	mov	r12, lr, ror #7
+	ldr	r11, [sp, #2*4]
 	eor	r12, r12, lr, ror #18
 	add	r5, lr, #0x00a00000
 	eor	r12, r12, lr, lsr #3
@@ -454,9 +446,9 @@ sha256d_ms_k_over:
 	add	r5, r5, lr
 	ldr	lr, [sp, #3*4]
 	
-	str	r5, [sp, #17*4]
 	eor	r12, r12, r4, ror #19
 	mov	r6, lr, ror #7
+	str	r5, [sp, #17*4]
 	eor	r12, r12, r4, lsr #10
 	eor	r6, r6, lr, ror #18
 	add	r11, r11, r12
@@ -465,9 +457,9 @@ sha256d_ms_k_over:
 	add	r6, r6, r11
 	ldr	r11, [sp, #4*4]
 	
-	str	r6, [sp, #18*4]
 	eor	r12, r12, r5, ror #19
 	mov	r7, r11, ror #7
+	str	r6, [sp, #18*4]
 	eor	r12, r12, r5, lsr #10
 	eor	r7, r7, r11, ror #18
 	add	lr, lr, r12
@@ -476,9 +468,9 @@ sha256d_ms_k_over:
 	add	r7, r7, lr
 	ldr	lr, [sp, #5*4]
 	
-	str	r7, [sp, #19*4]
 	eor	r12, r12, r6, ror #19
 	mov	r8, lr, ror #7
+	str	r7, [sp, #19*4]
 	eor	r12, r12, r6, lsr #10
 	eor	r8, r8, lr, ror #18
 	add	r11, r11, r12
@@ -487,9 +479,9 @@ sha256d_ms_k_over:
 	add	r8, r8, r11
 	ldr	r11, [sp, #6*4]
 	
-	str	r8, [sp, #20*4]
 	eor	r12, r12, r7, ror #19
 	mov	r9, r11, ror #7
+	str	r8, [sp, #20*4]
 	eor	r12, r12, r7, lsr #10
 	eor	r9, r9, r11, ror #18
 	add	lr, lr, r12
@@ -498,9 +490,9 @@ sha256d_ms_k_over:
 	add	r9, r9, lr
 	ldr	lr, [sp, #7*4]
 	
-	str	r9, [sp, #21*4]
 	eor	r12, r12, r8, ror #19
 	mov	r10, lr, ror #7
+	str	r9, [sp, #21*4]
 	eor	r12, r12, r8, lsr #10
 	eor	r10, r10, lr, ror #18
 	add	r11, r11, r12
