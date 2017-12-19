@@ -16,10 +16,10 @@ enum {
 	PRIO_PROCESS		= 0,
 };
 
-extern int opt_priority;
+extern int opt_default_priority;
 static __inline int setpriority(int which, int who, int prio)
 {
-	switch (opt_priority) {
+	switch (opt_default_priority) {
 		case 5:
 			prio = THREAD_PRIORITY_TIME_CRITICAL;
 			break;

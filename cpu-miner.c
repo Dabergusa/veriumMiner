@@ -2837,9 +2837,9 @@ int main(int argc, char *argv[]) {
 			FreeConsole();
 		}
 	}
-	if (opt_priority > 0) {
+	if (opt_default_priority > 0) {
 		DWORD prio = NORMAL_PRIORITY_CLASS;
-		switch (opt_priority) {
+		switch (opt_default_priority) {
 		case 1:
 			prio = BELOW_NORMAL_PRIORITY_CLASS;
 			break;
