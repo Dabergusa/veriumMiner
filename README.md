@@ -44,6 +44,26 @@ _OR_
 #### Note for Debian/Ubuntu users:
  * `apt-get install automake autoconf pkg-config libcurl4-openssl-dev libjansson-dev libssl-dev libgmp-dev zlib1g-dev`
 
+#### Notes for FreeBSD users:
+ * Install Dependencies: 
+`pkg install automake autoconf git`
+
+ * Build libcurl by compiling and installing the curl port
+`cd /usr/ports/ftp/curl; make install`
+
+ * Now checkout and build the cpuminer binary
+```
+   git clone https://github.com/fireworm71/veriumMiner.git
+   cd veriumMiner
+   export C_INCLUDE_PATH=$INCLUDE_PATH:/usr/local/include
+   export CPLUS_INCLUDE_PATH=$INCLUDE_PATH:/usr/local/include
+   export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib
+   ./autogen.sh
+   /usr/local/bin/perl ./nomacro.pl
+   ./configure CFLAGS="-march=native" --with-crypto --with-curl
+   make
+```
+
 #### Notes for AIX users:
  * To build a 64-bit binary, export OBJECT_MODE=64
  * GNU-style long options are not supported, but are accessible via configuration file
