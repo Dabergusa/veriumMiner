@@ -276,28 +276,24 @@ _sha256d_ms:
 	
 	ldr	lr, [r1, #3*4]
         cmp     r0, r0
-	ldr	r6, [r1, #18*4]
-	ldr	r7, [r1, #19*4]
+	ldrd	r6, [r1, #18*4]
 	
 	mov	r12, lr, ror #7
-	str	r6, [sp, #18*4]
 	eor	r12, r12, lr, ror #18
-	str	r7, [sp, #19*4]
+	strd	r6, [sp, #18*4]
 	eor	r12, r12, lr, lsr #3
 	ldr	r8, [r1, #20*4]
 	add	r6, r6, r12
 	ldr	r10, [r1, #22*4]
 	add	r7, r7, lr
-	str	r6, [r1, #18*4]
+	strd	r6, [r1, #18*4]
 	
 	mov	r12, r6, ror #17
-	str	r7, [r1, #19*4]
 	eor	r12, r12, r6, ror #19
 	str	r8, [sp, #20*4]
 	eor	r12, r12, r6, lsr #10
-	ldr	r4, [r1, #23*4]
+	ldrd	r4, [r1, #23*4]
 	add	r8, r8, r12
-	ldr	r5, [r1, #24*4]
 	
 	mov	r9, r7, ror #17
 	str	r8, [r1, #20*4]
@@ -322,36 +318,33 @@ _sha256d_ms:
 	add	r4, r4, lr
 	
 	mov	r12, r10, ror #17
-	str	r4, [r1, #23*4]
 	eor	r12, r12, r10, ror #19
 	mov	lr, r4, ror #17
 	eor	r12, r12, r10, lsr #10
 	eor	lr, lr, r4, ror #19
 	add	r5, r5, r12
 	eor	lr, lr, r4, lsr #10
-	str	r5, [r1, #24*4]
+        strd    r4, [r1, #23*4]
 	add	r6, r6, lr
 	
 	mov	r12, r5, ror #17
-	str	r6, [r1, #25*4]
 	eor	r12, r12, r5, ror #19
 	mov	lr, r6, ror #17
 	eor	r12, r12, r5, lsr #10
 	eor	lr, lr, r6, ror #19
 	add	r7, r7, r12
 	eor	lr, lr, r6, lsr #10
-	str	r7, [r1, #26*4]
+        strd    r6, [r1, #25*4]
 	add	r8, r8, lr
 	
 	mov	r12, r7, ror #17
-	str	r8, [r1, #27*4]
 	eor	r12, r12, r7, ror #19
 	mov	lr, r8, ror #17
 	eor	r12, r12, r7, lsr #10
 	eor	lr, lr, r8, ror #19
 	add	r9, r9, r12
 	eor	lr, lr, r8, lsr #10
-	str	r9, [r1, #28*4]
+        strd    r8, [r1, #27*4]
 	add	r10, r10, lr
 	
 	ldr	lr, [r1, #31*4]
@@ -393,12 +386,10 @@ sha256d_ms_extend_loop2:
 	
 	ldr	r4,  [r3, #0*4]
 	ldr	r9,  [r3, #1*4]
-	ldr	r10, [r3, #2*4]
-	ldr	r11, [r3, #3*4]
+	ldrd	r10, [r3, #2*4]
 	ldr	r8,  [r3, #4*4]
 	ldr	r5,  [r3, #5*4]
-	ldr	r6,  [r3, #6*4]
-	ldr	r7,  [r3, #7*4]
+	ldrd	r6,  [r3, #6*4]
 	b	sha256d_ms_main_loop1
 	
 sha256d_ms_main_loop2:
@@ -447,14 +438,11 @@ sha256d_ms_k_over:
 	add	r12, sp, #18*4
 	
 	ldmia	r12, {r4-r11}
-	str	r4,  [r1, #18*4]
-	str	r5,  [r1, #19*4]
+	strd	r4,  [r1, #18*4]
 	str	r6,  [r1, #20*4]
 	str	r7,  [r1, #22*4]
-	str	r8,  [r1, #23*4]
-	str	r9,  [r1, #24*4]
-	str	r10, [r1, #30*4]
-	str	r11, [r1, #31*4]
+	strd	r8,  [r1, #23*4]
+	strd	r10, [r1, #30*4]
 	
 	mov	r3,  #0x80000000
 	mov	r4,  #0
@@ -478,7 +466,6 @@ sha256d_ms_k_over:
 	mov	lr, r11, ror #7
 	add	r4, r4, r12
 	eor	lr, lr, r11, ror #18
-	str	r4, [sp, #16*4]
 	eor	lr, lr, r11, lsr #3
 	mov	r12, r4, ror #17
 	add	r5, r5, lr
@@ -486,7 +473,7 @@ sha256d_ms_k_over:
 	
 	eor	r12, r12, r4, ror #19
 	mov	r6, lr, ror #7
-	str	r5, [sp, #17*4]
+        strd     r4, [sp, #16*4]
 	eor	r12, r12, r4, lsr #10
 	eor	r6, r6, lr, ror #18
 	add	r11, r11, r12
@@ -497,7 +484,6 @@ sha256d_ms_k_over:
 	
 	eor	r12, r12, r5, ror #19
 	mov	r7, r11, ror #7
-	str	r6, [sp, #18*4]
 	eor	r12, r12, r5, lsr #10
 	eor	r7, r7, r11, ror #18
 	add	lr, lr, r12
@@ -508,7 +494,7 @@ sha256d_ms_k_over:
 	
 	eor	r12, r12, r6, ror #19
 	mov	r8, lr, ror #7
-	str	r7, [sp, #19*4]
+        strd    r6, [sp, #18*4]
 	eor	r12, r12, r6, lsr #10
 	eor	r8, r8, lr, ror #18
 	add	r11, r11, r12
@@ -519,7 +505,6 @@ sha256d_ms_k_over:
 	
 	eor	r12, r12, r7, ror #19
 	mov	r9, r11, ror #7
-	str	r8, [sp, #20*4]
 	eor	r12, r12, r7, lsr #10
 	eor	r9, r9, r11, ror #18
 	add	lr, lr, r12
@@ -530,7 +515,7 @@ sha256d_ms_k_over:
 	
 	eor	r12, r12, r8, ror #19
 	mov	r10, lr, ror #7
-	str	r9, [sp, #21*4]
+        strd    r8, [sp, #20*4]
 	eor	r12, r12, r8, lsr #10
 	eor	r10, r10, lr, ror #18
 	add	r11, r11, r12
@@ -548,36 +533,33 @@ sha256d_ms_k_over:
 	mov	r12, r10, ror #17
 	add	r4, lr, #0x00002000
 	eor	r12, r12, r10, ror #19
-	str	r4, [sp, #23*4]
 	add	r5, r5, #0x80000000
 	eor	r12, r12, r10, lsr #10
 	add	r5, r5, r12
 
 	mov	r12, r4, ror #17
-	str	r5, [sp, #24*4]
+        strd    r4, [sp, #23*4]
 	eor	r12, r12, r4, ror #19
 	mov	r11, r5, ror #17
 	eor	r12, r12, r4, lsr #10
 	eor	r11, r11, r5, ror #19
 	add	r6, r6, r12
 	eor	r11, r11, r5, lsr #10
-	str	r6, [sp, #25*4]
 	add	r7, r7, r11
 	
 	mov	r12, r6, ror #17
-	str	r7, [sp, #26*4]
+        strd    r6, [sp, #25*4]
 	eor	r12, r12, r6, ror #19
 	mov	r11, r7, ror #17
 	eor	r12, r12, r6, lsr #10
 	eor	r11, r11, r7, ror #19
 	add	r8, r8, r12
 	eor	r11, r11, r7, lsr #10
-	str	r8, [sp, #27*4]
 	add	r9, r9, r11
 	
 	mov	lr, r8, ror #17
 	mov	r12, r9, ror #17
-	str	r9, [sp, #28*4]
+        strd    r8, [sp, #27*4]
 	add	r4, r4, #0x00400000
 	eor	lr, lr, r8, ror #19
 	eor	r12, r12, r9, ror #19
