@@ -119,7 +119,8 @@ int opt_n_default_threads = 0;
 int opt_n_oneway_threads = 0;
 int opt_n_total_threads = 0;
 int use_affinity_mask = 0; // default to 'maybe'
-int64_t opt_affinity_mask = 0L;
+int64_t opt_affinity_mask_default = 0L;
+int64_t opt_affinity_mask_oneway = 0L;
 int opt_default_priority = 0;
 int opt_affinity_stride = 1;
 int opt_affinity_default_index = 0;
@@ -280,6 +281,7 @@ static struct option const options[] = {
 	{ "cpu-affinity", 1, NULL, 1020 },
 	{ "cpu-priority", 1, NULL, 1021 },
 	{ "cpu-priority-oneway", 1, NULL, 1022 },
+	{ "cpu-affinity-oneway", 1, NULL, 1023 },
 	{ "cpu-affinity-stride", 1, NULL, 1050 },
 	{ "cpu-affinity-default-index", 1, NULL, 1051 },
 	{ "cpu-affinity-oneway-index", 1, NULL, 1052 },
@@ -1621,18 +1623,33 @@ static void *miner_thread(void *userdata)
 				"Use --cpu-affinity-stride + --cpu-affinity-default-index.");
 		}
 
-		if (use_affinity_mask != -1) {
-			if (opt_affinity_mask == -1 && opt_n_total_threads > 1) {
-				if (opt_debug)
-					applog(LOG_DEBUG, "Binding thread %d to cpu %d (mask %x)", thr_id, thr_id % num_cpus, (1 << (thr_id % num_cpus)));
-				affine_to_cpu_mask(thr_id, 1UL << (thr_id % num_cpus));
-			} else if (opt_affinity_mask != -1L) {
-				if (opt_debug)
-					applog(LOG_DEBUG, "Binding thread %d to cpu mask %x", thr_id, opt_affinity_mask);
-				affine_to_cpu_mask(thr_id, (unsigned long)opt_affinity_mask);
+		if (use_affinity_mask == 1) {
+			if (thr_id >= opt_n_default_threads)
+			{
+				if (opt_affinity_mask_oneway == -1 && opt_n_total_threads > 1) {
+					if (opt_debug)
+						applog(LOG_DEBUG, "Binding onway thread %d to cpu %d (mask %x)", thr_id, thr_id % num_cpus, (1 << (thr_id % num_cpus)));
+					affine_to_cpu_mask(thr_id, 1UL << (thr_id % num_cpus));
+				} else if (opt_affinity_mask_oneway != -1L) {
+					if (opt_debug)
+						applog(LOG_DEBUG, "Binding oneway thread %d to cpu mask %x", thr_id, opt_affinity_mask_oneway);
+					affine_to_cpu_mask(thr_id, (unsigned long)opt_affinity_mask_oneway);
+				}
+			}
+			else
+			{
+				if (opt_affinity_mask_default == -1 && opt_n_total_threads > 1) {
+					if (opt_debug)
+						applog(LOG_DEBUG, "Binding thread %d to cpu %d (mask %x)", thr_id, thr_id % num_cpus, (1 << (thr_id % num_cpus)));
+					affine_to_cpu_mask(thr_id, 1UL << (thr_id % num_cpus));
+				} else if (opt_affinity_mask_default != -1L) {
+					if (opt_debug)
+						applog(LOG_DEBUG, "Binding thread %d to cpu mask %x", thr_id, opt_affinity_mask_default);
+					affine_to_cpu_mask(thr_id, (unsigned long)opt_affinity_mask_default);
+				}
 			}
 		}
-		else if (use_affinity_mask == -1) {
+		else if (use_affinity_mask != 0) {
 			#ifndef __linux__
 				if (num_cpus > 64 && use_affinity_mask == 1) {
 					applog(LOG_WARNING, "NUMBER OF CPUS IS GREATER THAN 64, --cpu-affinity will be wrong!\n"
@@ -2529,7 +2546,23 @@ void parse_arg(int key, char *arg)
 			ul = atol(arg);
 		if (ul > (1UL<<num_cpus)-1)
 			ul = -1;
-		opt_affinity_mask = ul;
+		opt_affinity_mask_default = ul;
+		use_affinity_mask = 1;
+		break;
+	case 1023: // '--cpu-affinity-oneway'
+		if (use_affinity_mask == -1){
+			applog(LOG_ERR, "BOTH --cpu-affinity and --cpu-affinity-stride have been defined!  Pick one or the other!");
+			show_usage_and_exit(1);
+		}
+
+		p = strstr(arg, "0x");
+		if (p)
+			ul = strtoul(p, NULL, 16);
+		else
+			ul = atol(arg);
+		if (ul > (1UL<<num_cpus)-1)
+			ul = -1;
+		opt_affinity_mask_oneway = ul;
 		use_affinity_mask = 1;
 		break;
 	case 1021:
@@ -2669,7 +2702,6 @@ static void parse_cmdline(int argc, char *argv[])
 			argv[0], argv[optind]);
 		show_usage_and_exit(1);
 	}
-	printf("cmdline parsed\n");
 }
 
 #ifndef WIN32
@@ -2719,7 +2751,8 @@ static int thread_create(struct thr_info *thr, void* func)
 
 static void show_credits()
 {
-    printf("\n Verium Miner forked from " PACKAGE_NAME " " PACKAGE_VERSION " by tpruvot@github **\n\n");
+    printf("\n Verium Miner forked from " PACKAGE_NAME " " PACKAGE_VERSION " by fireworm@github **");
+    printf("\n              credits to tpruvot et al. & effectsToCause et al. **\n\n");
 }
 
 void get_defconfig_path(char *out, size_t bufsize, char *argv0);
@@ -2855,17 +2888,17 @@ int main(int argc, char *argv[]) {
 		SetPriorityClass(GetCurrentProcess(), prio);
 	}
 #endif
-	if (opt_affinity_mask != -1 && opt_affinity_mask != 0 && use_affinity_mask == 1) {
+	if (opt_affinity_mask_default != -1 && opt_affinity_mask_default != 0 && use_affinity_mask == 1) {
 		if (!opt_quiet)
-			applog(LOG_DEBUG, "Binding process to cpu mask %x", opt_affinity_mask);
-		affine_to_cpu_mask(-1, (unsigned long)opt_affinity_mask);
+			applog(LOG_DEBUG, "Binding process to cpu mask %x", opt_affinity_mask_default | opt_affinity_mask_oneway);
+		affine_to_cpu_mask(-1, (unsigned long)(opt_affinity_mask_default | opt_affinity_mask_oneway) );
 	}
 
 #ifdef HAVE_SYSLOG_H
 	if (use_syslog)
 		openlog("cpuminer", LOG_PID, LOG_USER);
 #endif
-	if (use_affinity_mask == -1) {
+	if (use_affinity_mask != 1) {
 		thread_affinty_array = calloc(opt_n_total_threads, sizeof(int));
 		// threads ids are allocated in this order, so do affinity in this order too.
 		// [default way threads] [one way threads]
