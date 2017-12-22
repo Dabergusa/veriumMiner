@@ -59,7 +59,7 @@ _scrypt_best_throughput:
 	andl	$0x00000006, %eax
 	cmpl	$0x00000006, %eax
 	jne scrypt_best_throughput_no_avx2
-	movl	$3, %eax
+	movl	$6, %eax
 	jmp scrypt_best_throughput_exit
 scrypt_best_throughput_no_avx2:
 #endif
