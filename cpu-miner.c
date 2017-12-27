@@ -180,6 +180,9 @@ char *opt_api_allow = NULL;
 int opt_api_remote = 0;
 int opt_api_listen = 4048; /* 0 to disable */
 
+unsigned long hash_time = 0;
+unsigned int opt_hash_time_delay = 30; //30 seconds
+
 #ifdef HAVE_GETOPT_LONG
 #include <getopt.h>
 #else
@@ -1815,7 +1818,8 @@ static void *miner_thread(void *userdata)
                 hashes_done / (diff.tv_sec + diff.tv_usec * 1e-6);
 			pthread_mutex_unlock(&stats_lock);
 		}
-        if (thr_id == opt_n_total_threads - 1) {
+        if ((unsigned long)time(NULL) > hash_time) {
+			hash_time = (unsigned long)time(NULL) + (unsigned long)opt_hash_time_delay;
 			double hashrate = 0.;
 			for (i = 0; i < opt_n_total_threads && thr_hashrates[i]; i++)
 				hashrate += thr_hashrates[i];
