@@ -1818,7 +1818,7 @@ static void *miner_thread(void *userdata)
                 hashes_done / (diff.tv_sec + diff.tv_usec * 1e-6);
 			pthread_mutex_unlock(&stats_lock);
 		}
-        if ((unsigned long)time(NULL) > hash_time) {
+        if (thr_id == opt_n_total_threads - 1 && (unsigned long)time(NULL) > hash_time) {
 			hash_time = (unsigned long)time(NULL) + (unsigned long)opt_hash_time_delay;
 			double hashrate = 0.;
 			for (i = 0; i < opt_n_total_threads && thr_hashrates[i]; i++)
