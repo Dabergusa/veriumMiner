@@ -1768,7 +1768,13 @@ static inline void scrypt_core(uint32_t *X, uint32_t *V, int N)
 #define scrypt_best_throughput() 1
 #endif
 
+pthread_mutex_t alloc_mutex = PTHREAD_MUTEX_INITIALIZER;
 bool printed = false;
+bool tested_hugepages = false;
+bool disable_hugepages = false;
+int hugepages_successes = 0;
+int hugepages_fails = 0;
+int hugepages_size_failed = 0;
 unsigned char *scrypt_buffer_alloc(int N, int forceThroughput)
 {
 	uint32_t throughput = (forceThroughput == -1 ? scrypt_best_throughput() : forceThroughput);
@@ -1780,20 +1786,64 @@ unsigned char *scrypt_buffer_alloc(int N, int forceThroughput)
 	uint32_t size = throughput * 32 * (N + 1) * sizeof(uint32_t);
 
 #ifdef __linux__
-	unsigned char* m_memory = (unsigned char*)(mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0));
-	if (m_memory == MAP_FAILED)
+	pthread_mutex_lock(&alloc_mutex);
+	if (!tested_hugepages)
 	{
-		if( !printed)
+		FILE* f = fopen("/sys/kernel/mm/transparent_hugepage/enabled", "r");
+		if (f)
 		{
-			printf("HugePages unavailable (%d)\n", errno);
-			printed = true;
+			char buff[32];
+			fread(buff, 32, 1, f);
+			fclose(f);
+			if (strstr(buff, "[always]") != NULL)
+			{
+				applog(LOG_DEBUG, "HugePages disabled: transparent_hugepages detected\n");
+				disable_hugepages = true;
+			}
 		}
+		else
+		{
+			applog(LOG_DEBUG, "HugePages will attempt to allocate, transparent_hugepages not found\n");
+		}
+		tested_hugepages = true;
 	}
-	if (m_memory == MAP_FAILED)
+	pthread_mutex_unlock(&alloc_mutex);
+
+	if (!disable_hugepages)
 	{
-		m_memory = (unsigned char*)malloc(size);
+		unsigned char* m_memory = (unsigned char*)(mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0));
+		if (m_memory == MAP_FAILED)
+		{
+			pthread_mutex_lock(&alloc_mutex);
+			hugepages_fails++;
+			hugepages_size_failed += ((size / (2 * 1024 * 1024)) + 1);
+			if( hugepages_successes == 1)
+			{
+				if (!printed)
+				{
+					applog(LOG_DEBUG, "HugePages unavailable (%d)\n", errno);
+					printed = true;
+				}
+			}
+			else
+			{
+				applog(LOG_INFO, "HugePages too small! (%d success, %d fail)\n\tNeed at most %d more hugepages\n", hugepages_successes, hugepages_fails, hugepages_size_failed);
+			}
+			pthread_mutex_unlock(&alloc_mutex);
+			m_memory = (unsigned char*)malloc(size);
+		}
+		else
+		{
+			pthread_mutex_lock(&alloc_mutex);
+			hugepages_successes++;
+			pthread_mutex_unlock(&alloc_mutex);
+		}
+		return m_memory;
 	}
-	return m_memory;
+	else
+	{
+		return (unsigned char*)malloc(size);
+	}
 #else
 	return (unsigned char*)malloc(size);
 #endif
