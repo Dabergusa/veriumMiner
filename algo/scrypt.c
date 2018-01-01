@@ -1797,13 +1797,12 @@ unsigned char *scrypt_buffer_alloc(int N, int forceThroughput)
 			fclose(f);
 			if (strstr(buff, "[always]") != NULL)
 			{
-				applog(LOG_DEBUG, "HugePages disabled: transparent_hugepages detected\n");
+				applog(LOG_DEBUG, "HugePages type: transparent_hugepages\n");
 				disable_hugepages = true;
 			}
 		}
 		else
 		{
-			applog(LOG_DEBUG, "HugePages will attempt to allocate, transparent_hugepages not found\n");
 		}
 		tested_hugepages = true;
 	}
@@ -1817,7 +1816,7 @@ unsigned char *scrypt_buffer_alloc(int N, int forceThroughput)
 			pthread_mutex_lock(&alloc_mutex);
 			hugepages_fails++;
 			hugepages_size_failed += ((size / (2 * 1024 * 1024)) + 1);
-			if( hugepages_successes == 1)
+			if( hugepages_successes == 0)
 			{
 				if (!printed)
 				{
@@ -1835,6 +1834,11 @@ unsigned char *scrypt_buffer_alloc(int N, int forceThroughput)
 		else
 		{
 			pthread_mutex_lock(&alloc_mutex);
+			if (!printed)
+			{
+				printed = true;
+				applog(LOG_DEBUG, "HugePages type: preallocated\n");
+			}
 			hugepages_successes++;
 			pthread_mutex_unlock(&alloc_mutex);
 		}
