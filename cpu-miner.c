@@ -2921,7 +2921,8 @@ int main(int argc, char *argv[]) {
 			else {
 				type = "one way";
 			}
-			applog(LOG_DEBUG, "Thread %d (%s) bound to CPU #%d", i, type, thread_affinty_array[i]);
+			if (opt_debug)
+				applog(LOG_DEBUG, "Thread %d (%s) bound to CPU #%d", i, type, thread_affinty_array[i]);
 		}
 	}
 
