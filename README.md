@@ -33,8 +33,9 @@ Build
 =====
 
 #### Basic *nix build instructions:
- * just use ./build.sh
-_OR_
+ * `./build.sh`
+
+(If you are fancy,)
  * ./autogen.sh	# only needed if building from git repo
  * ./nomacro.pl	# only needed if building on Mac OS X or with Clang
  * ./configure CFLAGS="*-march=native*" --with-crypto --with-curl
@@ -73,19 +74,36 @@ _OR_
  * AVX enabled by default for x64 platform (AVX2 and XOP could also be used)
 
 #### Basic Windows build instructions, using MinGW64:
- * Install MinGW64 and the MSYS Developer Tool Kit (http://www.mingw.org/)
-   * Make sure you have mstcpip.h in MinGW\include
- * install pthreads-w64
- * Install libcurl devel (http://curl.haxx.se/download.html)
-   * Make sure you have libcurl.m4 in MinGW\share\aclocal
-   * Make sure you have curl-config in MinGW\bin
- * Install openssl devel (https://www.openssl.org/related/binaries.html)
- * In the MSYS shell, run:
-   * for 64bit, you can use ./mingw64.sh else :
-     ./autogen.sh	# only needed if building from git repo
-   * LIBCURL="-lcurldll" ./configure CFLAGS="*-march=native*"
-     * # Use -march=native if building for a single machine
-   * make
+ * Install MSYS 2 64bit
+* Open the MSYS2 64bit Shell
+
+```
+Pacman -Syu
+```
+
+* Kill Terminal with taskmanager & reopen
+
+```
+pacman -Sy mingw-w64-x86_64-gcc
+pacman -Sy make
+pacman -Sy automake
+pacman -Sy autoconf
+
+pacman -Sy mingw-w64-x86_64-curl
+pacman -Sy curl libcurl libcurl-devel mingw-w64-x86_64-curl mingw-w64-x86_64-libwinpthread-git libopenssl openssl openssl-devel
+```
+
+* Download
+https://netix.dl.sourceforge.net/project/ezwinports/make-4.2.1-without-guile-w32-bin.zip
+
+* Copy everything in C:\msys64\mingw64 without replacing anything
+* Download and extract the Miner from Git, place it in C:\msys64
+* Open MSYS2 MinGW64 Shell.
+```
+cd /veriumMiner-main
+./mingw64.sh
+```
+* If deploying to another computer, you will also need to copy: `libeay32.dll`, `libjansson-4.dll`, and `libwinpthread-1.dll` from the `C:\msys64\mingw64\bin` folder, as well as `cpuminer.exe`.
 
 #### Architecture-specific notes:
  * ARMv8:
