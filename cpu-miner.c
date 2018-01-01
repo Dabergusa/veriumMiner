@@ -879,7 +879,7 @@ static int share_result(int result, struct work *work, const char *reason)
 
 	switch (opt_algo) {
 	default:
-		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate / 1000.0);
+		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.5f", hashrate / 1000.0);
 		applog(LOG_NOTICE, "accepted: %lu/%lu (%s), %s kH/s %s",
 			accepted_count, accepted_count + rejected_count,
 			suppl, s, flag);
@@ -1843,7 +1843,7 @@ static void *miner_thread(void *userdata)
 			if (i == opt_n_total_threads) {
 				switch(opt_algo) {
 				default:
-                    sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate * 60);
+                    sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.3f", hashrate * 60);
                     applog(LOG_NOTICE, "Total: %s H/m", s);
 					break;
 				}
