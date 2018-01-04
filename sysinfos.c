@@ -14,17 +14,20 @@
 #ifndef WIN32
 
 #define HWMON_PATH \
- "/sys/devices/platform/coretemp.0/hwmon/hwmon1/temp1_input"
+ "/sys/devices/virtual/thermal/thermal_zone3/temp"
 #define HWMON_ALT \
- "/sys/class/hwmon/hwmon1/temp1_input"
+ "/sys/devices/platform/coretemp.0/hwmon/hwmon1/temp1_input"
 #define HWMON_ALT2 \
- "/sys/class/hwmon/hwmon0/temp1_input"
+ "/sys/class/hwmon/hwmon1/temp1_input"
 #define HWMON_ALT3 \
- "/sys/devices/platform/coretemp.0/hwmon/hwmon0/temp2_input"
+ "/sys/class/hwmon/hwmon0/temp1_input"
 #define HWMON_ALT4 \
- "/sys/class/hwmon/hwmon0/temp2_input"
+ "/sys/devices/platform/coretemp.0/hwmon/hwmon0/temp2_input"
 #define HWMON_ALT5 \
+ "/sys/class/hwmon/hwmon0/temp2_input"
+#define HWMON_ALT6 \
  "/sys/class/hwmon/hwmon0/device/temp1_input"
+
 
 static float linux_cputemp(int core)
 {
@@ -58,14 +61,21 @@ static float linux_cputemp(int core)
 }
 
 #define CPUFREQ_PATH \
+ "/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_cur_freq"
+#define CPUFREQ_PATH_ALT \
  "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq"
+
 static uint32_t linux_cpufreq(int core)
 {
 	FILE *fd = fopen(CPUFREQ_PATH, "r");
 	uint32_t freq = 0;
 
 	if (!fd)
-		return freq;
+	{
+		fd = fopen(CPUFREQ_PATH_ALT, "r");
+		if (!fd)
+			return freq;
+	}
 
 	if (!fscanf(fd, "%d", &freq))
 		return freq;

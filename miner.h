@@ -310,7 +310,7 @@ extern int num_cpus;
 extern struct work_restart *work_restart;
 extern uint32_t opt_work_size;
 extern double *thr_hashrates;
-extern uint64_t global_hashrate;
+extern double global_hashrate;
 extern double stratum_diff;
 extern double net_diff;
 extern double net_hashrate;

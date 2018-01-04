@@ -165,7 +165,7 @@ uint32_t solved_count = 0L;
 uint32_t accepted_count = 0L;
 uint32_t rejected_count = 0L;
 double *thr_hashrates;
-uint64_t global_hashrate = 0;
+double global_hashrate = 0;
 double stratum_diff = 0.;
 double net_diff = 0.;
 double net_hashrate = 0.;
@@ -859,7 +859,7 @@ static int share_result(int result, struct work *work, const char *reason)
 	result ? accepted_count++ : rejected_count++;
 	pthread_mutex_unlock(&stats_lock);
 
-	global_hashrate = (uint64_t) hashrate;
+	global_hashrate = hashrate;
 
 	if (!net_diff || sharediff < net_diff) {
 		flag = use_colors ?
@@ -1780,7 +1780,7 @@ static void *miner_thread(void *userdata)
 				}
 				if (opt_benchmark) {
 					char rate[32];
-					format_hashrate((double)global_hashrate, rate);
+					format_hashrate(global_hashrate, rate);
 					applog(LOG_NOTICE, "Benchmark: %s", rate);
 					fprintf(stderr, "%llu\n", (long long unsigned int) global_hashrate);
 				} else {
@@ -1847,7 +1847,7 @@ static void *miner_thread(void *userdata)
                     applog(LOG_NOTICE, "Total: %s H/m", s);
 					break;
 				}
-				global_hashrate = (uint64_t) hashrate;
+				global_hashrate = hashrate;
 			}
 		}
 

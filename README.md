@@ -4,6 +4,8 @@ veriumMiner
 This is a multi-threaded CPU miner for Verium using scrypt²,
 fork of [tpruvot](//github.com/tpruvot)'s cpuminer-multi (see AUTHORS for list of contributors).
 
+[Latest Binaries here](https://github.com/fireworm71/veriumMiner/releases/latest)
+
 #### Table of contents
 
 * [Dependencies](#dependencies)
@@ -98,7 +100,7 @@ https://netix.dl.sourceforge.net/project/ezwinports/make-4.2.1-without-guile-w32
 
 * Copy everything in C:\msys64\mingw64 without replacing anything
 * Download and extract the Miner from Git, place it in C:\msys64
-* Open MSYS2 MinGW64 Shell.
+* Open MSYS2 MinGW64 Shell:
 ```
 cd /veriumMiner-main
 ./mingw64.sh
