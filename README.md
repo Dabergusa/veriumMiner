@@ -4,12 +4,12 @@ veriumMiner
 This is a multi-threaded CPU miner for Verium using scrypt²,
 fork of [tpruvot](//github.com/tpruvot)'s cpuminer-multi (see AUTHORS for list of contributors).
 
-[Latest Binaries here](https://github.com/fireworm71/veriumMiner/releases/latest)
+# [Latest Binaries here](https://github.com/fireworm71/veriumMiner/releases/latest)
 
 #### Table of contents
 
-* [Dependencies](#dependencies)
 * [Download](#download)
+* [Dependencies](#dependencies)
 * [Build](#build)
 * [Usage instructions](#usage-instructions)
 * [Donations](#donations)
@@ -17,6 +17,10 @@ fork of [tpruvot](//github.com/tpruvot)'s cpuminer-multi (see AUTHORS for list o
 * [Credits](#credits)
 * [License](#license)
 
+Download
+========
+ * Git tree:   https://github.com/fireworm71/veriumMiner
+ * Clone with `git clone https://github.com/fireworm71/veriumMiner`
 
 Dependencies
 ============
@@ -26,38 +30,27 @@ Dependencies
  * pthreads
  * zlib (for curl/ssl)
 
-Download
-========
- * Git tree:   https://github.com/fireworm71/veriumMiner
- * Clone with `git clone https://github.com/fireworm71/veriumMiner`
+ * Ubuntu / Debian: 
+  * `apt-get install automake autoconf pkg-config libcurl4-openssl-dev libjansson-dev libssl-dev libgmp-dev zlib1g-dev`
+ * FreeBSD:
+  * `pkg install automake autoconf git`
+  * Build libcurl by compiling and installing the curl port
+    `cd /usr/ports/ftp/curl; make install`
 
 Build
 =====
 
 #### Basic *nix build instructions:
- * `./build.sh`
+ * After dowloading dependencies: `./build.sh`
 
-(If you are fancy,)
+#### If you are fancy,
  * ./autogen.sh	# only needed if building from git repo
  * ./nomacro.pl	# only needed if building on Mac OS X or with Clang
- * ./configure CFLAGS="*-march=native*" --with-crypto --with-curl
-   * # Use -march=native if building for a single machine
+ * ./configure CFLAGS="-march=native" --with-crypto --with-curl
  * make
 
-#### Note for Debian/Ubuntu users:
- * `apt-get install automake autoconf pkg-config libcurl4-openssl-dev libjansson-dev libssl-dev libgmp-dev zlib1g-dev`
-
-#### Notes for FreeBSD users:
- * Install Dependencies: 
-`pkg install automake autoconf git`
-
- * Build libcurl by compiling and installing the curl port
-`cd /usr/ports/ftp/curl; make install`
-
- * Now checkout and build the cpuminer binary
+#### FreeBSD users:
 ```
-   git clone https://github.com/fireworm71/veriumMiner.git
-   cd veriumMiner
    export C_INCLUDE_PATH=$INCLUDE_PATH:/usr/local/include
    export CPLUS_INCLUDE_PATH=$INCLUDE_PATH:/usr/local/include
    export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib
@@ -71,19 +64,15 @@ Build
  * To build a 64-bit binary, export OBJECT_MODE=64
  * GNU-style long options are not supported, but are accessible via configuration file
 
-#### Basic Windows build with Visual Studio 2013
- * All the required .lib files are now included in tree (windows only)
- * AVX enabled by default for x64 platform (AVX2 and XOP could also be used)
-
 #### Basic Windows build instructions, using MinGW64:
  * Install MSYS 2 64bit
-* Open the MSYS2 64bit Shell
+ * Open the MSYS2 64bit Shell
 
 ```
 Pacman -Syu
 ```
 
-* Kill Terminal with taskmanager & reopen
+ * Kill Terminal with taskmanager & reopen
 
 ```
 pacman -Sy mingw-w64-x86_64-gcc
@@ -95,24 +84,24 @@ pacman -Sy mingw-w64-x86_64-curl
 pacman -Sy curl libcurl libcurl-devel mingw-w64-x86_64-curl mingw-w64-x86_64-libwinpthread-git libopenssl openssl openssl-devel
 ```
 
-* Download
+ * Download
 https://netix.dl.sourceforge.net/project/ezwinports/make-4.2.1-without-guile-w32-bin.zip
 
-* Copy everything in C:\msys64\mingw64 without replacing anything
-* Download and extract the Miner from Git, place it in C:\msys64
-* Open MSYS2 MinGW64 Shell:
+ * Copy everything in C:\msys64\mingw64 without replacing anything
+ * Download and extract the Miner from Git, place it in C:\msys64
+ * Open MSYS2 MinGW64 Shell:
 ```
 cd /veriumMiner-main
 ./mingw64.sh
 ```
-* If deploying to another computer, you will also need to copy: `libeay32.dll`, `libjansson-4.dll`, and `libwinpthread-1.dll` from the `C:\msys64\mingw64\bin` folder, as well as `cpuminer.exe`.
+ * If deploying to another computer, you will also need to copy: `libeay32.dll`, `libjansson-4.dll`, and `libwinpthread-1.dll` from the `C:\msys64\mingw64\bin` folder, as well as `cpuminer.exe`.
 
 #### Architecture-specific notes:
  * ARMv8:
    * Neon is enabled by default, ./build.sh should work fine.
  * ARMv7:
    * No runtime CPU detection. The miner can take advantage of some instructions specific to ARMv5E and later processors, but the decision whether to use them is made at compile time, based on compiler-defined macros.
-   * To use NEON instructions, add "-mfpu=neon" to CFLAGS.
+   * To use NEON instructions, add `-mfpu=neon` to CFLAGS.
  * x86:
    * The miner checks for SSE2 instructions support at runtime, and uses them if they are available.
  * x86-64:	
