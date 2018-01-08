@@ -28,6 +28,7 @@ To use this miner, you can do one of the following:
   ```
   [install dependencies for your os]
   git clone https://github.com/fireworm71/veriumMiner
+  cd veriumMiner
   ./build.sh
   ./cpuminer ...
   ```
@@ -35,6 +36,7 @@ To use this miner, you can do one of the following:
   ```
   [install dependencies for your os]
   git clone https://github.com/fireworm71/veriumMiner
+  cd veriumMiner
   ./autogen.sh
   perl nomacro.pl
   ./configure CFLAGS="-O2" --with-curl --with-crypto
@@ -145,13 +147,36 @@ Run "cpuminer --help" to see options.
 ### HugePages 
 HugePages on Linux preallocate a bunch of memory for 'a specific use', in this case, for the miner.  
 #### HugePages (Linux)
-To enable them (on Ubuntu 16.04), first check that you have `/proc/sys/vm/nr_hugepages` by doing `ls /proc/sys/vm` (you should see `nr_hugepages` in the print out).  
+To make matters complicated, there are two ways of doing this.  One is `transparent_hugepages` one is `preallocated`.  Even more complicated, one is sometimes faster than the other.
 
-You can allocate huge pages by doing one of two things:
-1) `sudo nano /etc/sysctl.conf`, scroll to the bottom, and type in `vm.nr_hugepages=size`, then `Ctrl+O`, then `[Enter]`, then `Ctrl+X`.
-2) `echo "vm.nr_hugepages=size" > sudo tee --append /etc/sysctl.conf`.
+*This miner will use `transparent_hugepages` by default`.*
 
-After either, do `sudo sysctl -p`.  You should see `vm.nr_hugepages=size` print out on the console.  If not, check your distro.  You may need to recompile your kernel to enable this.  You can also verify that memory is allocated by running `free` and seeing that you now have a ton of memory allocated, but aren't running anything that's using it.
+To enable `transparent_hugepages`, (on Ubuntu 16.04):
+`echo always | sudo tee /sys/kernel/mm/transparent_hugepage/enabled`
+
+To disable `transparent_hugepages`, (on Ubuntu 16.04):
+`echo never | sudo tee /sys/kernel/mm/transparent_hugepage/enabled`
+
+To verify the status of `transparent_hugepages`
+`cat /sys/kernel/mm/transparent_hugepage/enabled`  (`[]` will show around the current status).
+
+To enable `preallocated` hugepages (on Ubuntu 16.04), first check that you have `/proc/sys/vm/nr_hugepages` by doing `ls /proc/sys/vm` (you should see `nr_hugepages` in the print out).  Then,
+1. `sudo nano /etc/sysctl.conf`, 
+2. scroll to the bottom, 
+3. type in `vm.nr_hugepages=size`
+4. `Ctrl+O`, then `[Enter]`, then `Ctrl+X`.
+5. `sudo sysctl -p`
+
+To disable:
+1. `sudo nano /etc/sysctl.conf`, 
+2. scroll to the bottom, 
+3. remove the line `vm.nr_hugepages=size`
+4. `Ctrl+O`, then `[Enter]`, then `Ctrl+X`.
+5. `sudo sysctl -p`
+
+Note that you can also reboot and this will cause HugePages to allocate / deallocate.
+
+When enabling, you should see `vm.nr_hugepages=size` print out on the console.  If not, check your distro.  You may need to recompile your kernel to enable this.  You can also verify that memory is allocated by running `free` and seeing that you now have a ton of memory allocated, but aren't running anything that's using it.
 
 `size` = (the amount of memory each miner thread needs) / (2048 * 1024).  
 
@@ -163,16 +188,10 @@ How much memory is be used per thread?
 * ARMv7 (3way) : 384MB -> nr_hugepages = 193.
 * ARMv8 (3way) : 384MB -> nr_hugepages = 193.
 
-For example, 4 threads on an SSE4, you'd type `echo "vm.nr_hugepages=772" > sudo tee --append /etc/sysctl.conf`
-
 Multiply that number by the number of threads, and you will have the size needed.  Note, you may not have enough RAM for this on ARM SoCs.  The miner should still work, but it will not be as optimal. 
 
-How can you tell you have enough HugePages?
-You will not see `HugePages unavailable (##)` print out.  That means you have successfully allocated all needed HugePages for the miner.
+For example, 4 threads on an SSE4, you'd type `vm.nr_hugepages=772`.  Since 4 (threads) * 193 (hugepages per thread) = 772.
 
-If for some reason you want to remove HugePages (or adjust the size):
-
-`sudo nano /etc/sysctl.conf`, scroll to the bottom, and remove / edit the line `vm.nr_hugepages=size`, `Ctrl+O`, `[Enter]`, `Ctrl+X`.  Then, like before, `sudo sysctl -p`.  Note that you can also reboot and this will cause HugePages to allocate / deallocate.
 
 #### HugePages (Windows)
 
