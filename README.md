@@ -12,15 +12,40 @@ fork of [tpruvot](//github.com/tpruvot)'s cpuminer-multi (see AUTHORS for list o
 * [Dependencies](#dependencies)
 * [Build](#build)
 * [Usage instructions](#usage-instructions)
+  * [HugePages Linux](#HugePages-_Linux_)
+  * [HugePages Windows](#HugePages-_Windows_)
 * [Donations](#donations)
 * [GCC 7.2](#gcc)
 * [Credits](#credits)
 * [License](#license)
 
+Overview
+========
+To use this miner, you can do one of the following:
+* Grab a precompiled exe [here](https://github.com/fireworm71/veriumMiner/releases/latest).
+* Build from source: Easy:
+  ```
+  [install dependencies for your os]
+  git clone https://github.com/fireworm71/veriumMiner
+  ./build.sh
+  ./cpuminer ...
+  ```
+* Build from source: Advanced:
+  ```
+  [install dependencies for your os]
+  git clone https://github.com/fireworm71/veriumMiner
+  ./autogen.sh
+  perl nomacro.pl
+  ./configure CFLAGS="-O2" --with-curl --with-crypto
+  make clean && make
+  ./cpuminer ...
+  ```
+
 Download
 ========
  * Git tree:   https://github.com/fireworm71/veriumMiner
  * Clone with `git clone https://github.com/fireworm71/veriumMiner`
+ * [Latest Binaries here](https://github.com/fireworm71/veriumMiner/releases/latest)
 
 Dependencies
 ============
@@ -116,9 +141,9 @@ Usage instructions
 ==================
 Run "cpuminer --help" to see options.
 
-### HugePages (Linux only)
-Linux provides a nice optimization (+10% - +50% gains) that enables faster memory lookups.  These are 'HugePages'.  HugePages preallocate a bunch of memory for 'a specific use', in this case, for the miner.  
-
+### HugePages 
+HugePages on Linux preallocate a bunch of memory for 'a specific use', in this case, for the miner.  
+#### HugePages (Linux)
 To enable them (on Ubuntu 16.04), first check that you have `/proc/sys/vm/nr_hugepages` by doing `ls /proc/sys/vm` (you should see `nr_hugepages` in the print out).  
 
 You can allocate huge pages by doing one of two things:
@@ -147,6 +172,22 @@ You will not see `HugePages unavailable (##)` print out.  That means you have su
 If for some reason you want to remove HugePages (or adjust the size):
 
 `sudo nano /etc/sysctl.conf`, scroll to the bottom, and remove / edit the line `vm.nr_hugepages=size`, `Ctrl+O`, `[Enter]`, `Ctrl+X`.  Then, like before, `sudo sysctl -p`.  Note that you can also reboot and this will cause HugePages to allocate / deallocate.
+
+#### HugePages Windows
+
+ * You need to run the miner with "Run As Administrator" on Windows.
+ * You need to edit your system's group policies to enable locking large pages. Here are the steps from MSDN: 
+
+ 1. On the Start menu, click Run. In the Open box, type gpedit.msc.
+ 2. On the Local Group Policy Editor console, expand Computer Configuration, and then expand Windows Settings.
+ 3. Expand Security Settings, and then expand Local Policies.
+ 4. Select the User Rights Assignment folder.
+ 5. The policies will be displayed in the details pane.
+ 6. In the pane, double-click Lock pages in memory.
+ 7. In the Local Security Setting – Lock pages in memory dialog box, click Add User or Group.
+ 8. In the Select Users, Service Accounts, or Groups dialog box, add an account that you will run the miner on
+ 9. Reboot for change to take effect.
+  * Windows also tends to fragment memory a lot. If you are running on a system with 4-8GB of RAM you might need to switch off all the auto-start applications and reboot to have a large enough chunk of contiguous memory.
 
 ### Oneways, cpu affinity.
 

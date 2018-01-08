@@ -1848,6 +1848,62 @@ unsigned char *scrypt_buffer_alloc(int N, int forceThroughput)
 	{
 		return (unsigned char*)malloc(size);
 	}
+#elif defined(WIN32)
+
+	pthread_mutex_lock(&alloc_mutex);
+	if (!tested_hugepages)
+	{
+		tested_hugepages = true;
+		
+		HANDLE           hToken;
+		TOKEN_PRIVILEGES tp;
+		BOOL             status;
+
+		if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+			disable_hugepages = true;
+
+		if (!disable_hugepages && !LookupPrivilegeValue(NULL, TEXT("SeLockMemoryPrivilege"), &tp.Privileges[0].Luid))
+			disable_hugepages = true;
+
+		if (!disable_hugepages)
+		{
+			tp.PrivilegeCount = 1;
+			tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+			status = AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
+		}
+
+		if (disable_hugepages || (!status || (GetLastError() != ERROR_SUCCESS)))
+		{
+			applog(LOG_DEBUG, "HugePages: not enabled, view readme for more info!");
+			disable_hugepages = true;
+		}
+
+		CloseHandle(hToken);
+	}
+	pthread_mutex_unlock(&alloc_mutex);
+
+	if (tested_hugepages && !disable_hugepages)
+	{   
+		int size = N * scrypt_best_throughput() * 128;
+		SIZE_T iLargePageMin = GetLargePageMinimum();
+		if (size < iLargePageMin)
+			size = iLargePageMin;
+
+		unsigned char *scratchpad = VirtualAllocEx(GetCurrentProcess(), NULL, size, MEM_RESERVE | MEM_COMMIT | MEM_LARGE_PAGES, PAGE_READWRITE);
+		if (!scratchpad)
+		{
+			applog(LOG_ERR, "Large page allocation failed.");
+			scratchpad = VirtualAllocEx(GetCurrentProcess(), NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+		}
+
+		return scratchpad;
+	}
+	else
+	{
+		return (unsigned char*)malloc(size);
+	}
+
 #else
 	return (unsigned char*)malloc(size);
 #endif
