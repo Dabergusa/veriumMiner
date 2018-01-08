@@ -150,7 +150,7 @@ HugePages allow for faster memory lookups, which is very important for this mine
 #### HugePages (Linux)
 To make matters complicated, there are two ways of doing this.  One is `transparent_hugepages` one is `preallocated`.  Even more complicated, one is sometimes faster than the other.
 
-*This miner will use `transparent_hugepages` by default`.*
+**This miner will use `transparent_hugepages` by default.**
 
 To enable `transparent_hugepages`, (on Ubuntu 16.04):
 `echo always | sudo tee /sys/kernel/mm/transparent_hugepage/enabled`
