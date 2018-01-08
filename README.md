@@ -145,7 +145,8 @@ Usage instructions
 Run "cpuminer --help" to see options.
 
 ### HugePages 
-HugePages on Linux preallocate a bunch of memory for 'a specific use', in this case, for the miner.  
+HugePages allow for faster memory lookups, which is very important for this miner.  Enabling HugePages typically gets 10% or more performance.
+
 #### HugePages (Linux)
 To make matters complicated, there are two ways of doing this.  One is `transparent_hugepages` one is `preallocated`.  Even more complicated, one is sometimes faster than the other.
 
