@@ -8,12 +8,13 @@ fork of [tpruvot](//github.com/tpruvot)'s cpuminer-multi (see AUTHORS for list o
 
 #### Table of contents
 
+* [Overview](#overview)
 * [Download](#download)
 * [Dependencies](#dependencies)
 * [Build](#build)
 * [Usage instructions](#usage-instructions)
-  * [HugePages Linux](#HugePages-_Linux_)
-  * [HugePages Windows](#HugePages-_Windows_)
+  * [HugePages Linux](#hugepages-linux)
+  * [HugePages Windows](#hugepages-windows)
 * [Donations](#donations)
 * [GCC 7.2](#gcc)
 * [Credits](#credits)
@@ -173,7 +174,7 @@ If for some reason you want to remove HugePages (or adjust the size):
 
 `sudo nano /etc/sysctl.conf`, scroll to the bottom, and remove / edit the line `vm.nr_hugepages=size`, `Ctrl+O`, `[Enter]`, `Ctrl+X`.  Then, like before, `sudo sysctl -p`.  Note that you can also reboot and this will cause HugePages to allocate / deallocate.
 
-#### HugePages Windows
+#### HugePages (Windows)
 
  * You need to run the miner with "Run As Administrator" on Windows.
  * You need to edit your system's group policies to enable locking large pages. Here are the steps from MSDN: 
