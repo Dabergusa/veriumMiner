@@ -26,6 +26,12 @@
 
 #include <cpuminer-config.h>
 
+#ifndef NO_PREFETCH
+#define prefetch(x) prefetcht0 x
+#else
+#define prefetch(x) 
+#endif
+
 #if defined(__linux__) && defined(__ELF__)
 	.section .note.GNU-stack,"",%progbits
 #endif
@@ -1231,16 +1237,16 @@ scrypt_core_3way_avx_loop1:
 	andl	%r8d, %ebp
 	leaq	(%rbp, %rbp, 2), %rbp
 	shll	$7, %ebp
-		prefetcht0 0(%rsi, %rbp)
-		prefetcht0 32(%rsi, %rbp)
+		prefetch( 0(%rsi, %rbp) )
+		prefetch( 32(%rsi, %rbp) )
 	movd	%xmm8, %ebx
 	andl	%r8d, %ebx
 	leaq	1(%rbx, %rbx, 2), %rbx
 	shll	$7, %ebx
-		prefetcht0 0(%rsi, %rbx)
-		prefetcht0 32(%rsi, %rbx)
-		prefetcht0 64(%rsi, %rbx)
-		prefetcht0 96(%rsi, %rbx)
+		prefetch( 0(%rsi, %rbx))
+		prefetch( 32(%rsi, %rbx))
+		prefetch( 64(%rsi, %rbx))
+		prefetch( 96(%rsi, %rbx))
 scrypt_core_3way_avx_loop2:
 	movd	%xmm12, %eax
 	andl	%r8d, %eax
@@ -1255,13 +1261,13 @@ scrypt_core_3way_avx_loop2:
 	pxor	128+32(%rsp), %xmm10
 	pxor	128+48(%rsp), %xmm11
 	pxor	256+0(%rsp), %xmm12
-		prefetcht0 0(%rsi, %rax)
+		prefetch( 0(%rsi, %rax))
 	pxor	256+16(%rsp), %xmm13
-		prefetcht0 32(%rsi, %rax)
+		prefetch( 32(%rsi, %rax))
 	pxor	256+32(%rsp), %xmm14
-		prefetcht0 64(%rsi, %rax)
+		prefetch( 64(%rsi, %rax))
 	pxor	256+48(%rsp), %xmm15
-		prefetcht0 96(%rsi, %rax)
+		prefetch( 96(%rsi, %rax))
 
 	pxor	0(%rsi, %rbp), %xmm0
 	pxor	16(%rsi, %rbp), %xmm1
@@ -1356,13 +1362,13 @@ scrypt_core_3way_avx_loop2:
 	andl	%r8d, %ebp
 	leaq	(%rbp, %rbp, 2), %rbp
 	shll	$7, %ebp
-		prefetcht0 0(%rsi, %rbp)
+		prefetch( 0(%rsi, %rbp))
 	paddd	80(%rsp), %xmm1
-		prefetcht0 32(%rsi, %rbp)
+		prefetch( 32(%rsi, %rbp))
 	paddd	96(%rsp), %xmm2
-		prefetcht0 64(%rsi, %rbp)
+		prefetch( 64(%rsi, %rbp))
 	paddd	112(%rsp), %xmm3
-		prefetcht0 96(%rsi, %rbp)
+		prefetch( 96(%rsi, %rbp))
 	paddd	128+64(%rsp), %xmm8
 	paddd	128+80(%rsp), %xmm9
 	paddd	128+96(%rsp), %xmm10
@@ -1379,13 +1385,13 @@ scrypt_core_3way_avx_loop2:
 	andl	%r8d, %ebx
 	leaq	1(%rbx, %rbx, 2), %rbx
 	shll	$7, %ebx
-		prefetcht0 0(%rsi, %rbx)
+		prefetch( 0(%rsi, %rbx))
 	movdqa	%xmm8, 128+64(%rsp)
-		prefetcht0 32(%rsi, %rbx)
+		prefetch( 32(%rsi, %rbx))
 	movdqa	%xmm9, 128+80(%rsp)
-		prefetcht0 64(%rsi, %rbx)
+		prefetch( 64(%rsi, %rbx))
 	movdqa	%xmm10, 128+96(%rsp)
-		prefetcht0 96(%rsi, %rbx)
+		prefetch( 96(%rsi, %rbx))
 	movdqa	%xmm11, 128+112(%rsp)
 	movdqa	%xmm12, 256+64(%rsp)
 	movdqa	%xmm13, 256+80(%rsp)
@@ -1664,16 +1670,16 @@ scrypt_core_3way_xop_loop1:
 	andl	%r8d, %ebp
 	leaq	(%rbp, %rbp, 2), %rbp
 	shll	$7, %ebp
-		prefetcht0 0(%rsi, %rbp)
-		prefetcht0 32(%rsi, %rbp)
+		prefetch( 0(%rsi, %rbp))
+		prefetch( 32(%rsi, %rbp))
 	movd	%xmm8, %ebx
 	andl	%r8d, %ebx
 	leaq	1(%rbx, %rbx, 2), %rbx
 	shll	$7, %ebx
-		prefetcht0 0(%rsi, %rbx)
-		prefetcht0 32(%rsi, %rbx)
-		prefetcht0 64(%rsi, %rbx)
-		prefetcht0 96(%rsi, %rbx)
+		prefetch( 0(%rsi, %rbx))
+		prefetch( 32(%rsi, %rbx))
+		prefetch( 64(%rsi, %rbx))
+		prefetch( 96(%rsi, %rbx))
 scrypt_core_3way_xop_loop2:
 	movd	%xmm12, %eax
 	andl	%r8d, %eax
@@ -1688,13 +1694,13 @@ scrypt_core_3way_xop_loop2:
 	pxor	128+32(%rsp), %xmm10
 	pxor	128+48(%rsp), %xmm11
 	pxor	256+0(%rsp), %xmm12
-		prefetcht0 0(%rsi, %rax)
+		prefetch( 0(%rsi, %rax))
 	pxor	256+16(%rsp), %xmm13
-		prefetcht0 32(%rsi, %rax)
+		prefetch( 32(%rsi, %rax))
 	pxor	256+32(%rsp), %xmm14
-		prefetcht0 64(%rsi, %rax)
+		prefetch( 64(%rsi, %rax))
 	pxor	256+48(%rsp), %xmm15
-		prefetcht0 96(%rsi, %rax)
+		prefetch( 96(%rsi, %rax))
 		
 	pxor	0(%rsi, %rbp), %xmm0
 	pxor	16(%rsi, %rbp), %xmm1
@@ -1789,13 +1795,13 @@ scrypt_core_3way_xop_loop2:
 	andl	%r8d, %ebp
 	leaq	(%rbp, %rbp, 2), %rbp
 	shll	$7, %ebp
-		prefetcht0 0(%rsi, %rbp)
+		prefetch( 0(%rsi, %rbp))
 	paddd	80(%rsp), %xmm1
-		prefetcht0 32(%rsi, %rbp)
+		prefetch( 32(%rsi, %rbp))
 	paddd	96(%rsp), %xmm2
-		prefetcht0 64(%rsi, %rbp)
+		prefetch( 64(%rsi, %rbp))
 	paddd	112(%rsp), %xmm3
-		prefetcht0 96(%rsi, %rbp)
+		prefetch( 96(%rsi, %rbp))
 	paddd	128+64(%rsp), %xmm8
 	paddd	128+80(%rsp), %xmm9
 	paddd	128+96(%rsp), %xmm10
@@ -1812,13 +1818,13 @@ scrypt_core_3way_xop_loop2:
 	andl	%r8d, %ebx
 	leaq	1(%rbx, %rbx, 2), %rbx
 	shll	$7, %ebx
-		prefetcht0 0(%rsi, %rbx)
+		prefetch( 0(%rsi, %rbx))
 	movdqa	%xmm8, 128+64(%rsp)
-		prefetcht0 32(%rsi, %rbx)
+		prefetch( 32(%rsi, %rbx))
 	movdqa	%xmm9, 128+80(%rsp)
-		prefetcht0 64(%rsi, %rbx)
+		prefetch( 64(%rsi, %rbx))
 	movdqa	%xmm10, 128+96(%rsp)
-		prefetcht0 96(%rsi, %rbx)
+		prefetch( 96(%rsi, %rbx))
 	movdqa	%xmm11, 128+112(%rsp)
 	movdqa	%xmm12, 256+64(%rsp)
 	movdqa	%xmm13, 256+80(%rsp)
@@ -2194,16 +2200,16 @@ scrypt_core_3way_xmm_loop1:
 	andl	%r8d, %ebp
 	leaq	(%rbp, %rbp, 2), %rbp
 	shll	$7, %ebp
-		prefetcht0 0(%rsi, %rbp)
-		prefetcht0 32(%rsi, %rbp)
+		prefetch( 0(%rsi, %rbp))
+		prefetch( 32(%rsi, %rbp))
 	movd	%xmm8, %ebx
 	andl	%r8d, %ebx
 	leaq	1(%rbx, %rbx, 2), %rbx
 	shll	$7, %ebx
-		prefetcht0 0(%rsi, %rbx)
-		prefetcht0 32(%rsi, %rbx)
-		prefetcht0 64(%rsi, %rbx)
-		prefetcht0 96(%rsi, %rbx)
+		prefetch( 0(%rsi, %rbx))
+		prefetch( 32(%rsi, %rbx))
+		prefetch( 64(%rsi, %rbx))
+		prefetch( 96(%rsi, %rbx))
 scrypt_core_3way_xmm_loop2:
 	movd	%xmm12, %eax
 	andl	%r8d, %eax
@@ -2218,13 +2224,13 @@ scrypt_core_3way_xmm_loop2:
 	pxor	128+32(%rsp), %xmm10
 	pxor	128+48(%rsp), %xmm11
 	pxor	256+0(%rsp), %xmm12
-		prefetcht0 0(%rsi, %rax)
+		prefetch( 0(%rsi, %rax))
 	pxor	256+16(%rsp), %xmm13
-		prefetcht0 32(%rsi, %rax)
+		prefetch( 32(%rsi, %rax))
 	pxor	256+32(%rsp), %xmm14
-		prefetcht0 64(%rsi, %rax)
+		prefetch( 64(%rsi, %rax))
 	pxor	256+48(%rsp), %xmm15
-		prefetcht0 96(%rsi, %rax)
+		prefetch( 96(%rsi, %rax))
 		
 	pxor	0(%rsi, %rbp), %xmm0
 	pxor	16(%rsi, %rbp), %xmm1
@@ -2319,13 +2325,13 @@ scrypt_core_3way_xmm_loop2:
 	andl	%r8d, %ebp
 	leaq	(%rbp, %rbp, 2), %rbp
 	shll	$7, %ebp
-		prefetcht0 0(%rsi, %rbp)
+		prefetch( 0(%rsi, %rbp))
 	paddd	80(%rsp), %xmm1
-		prefetcht0 32(%rsi, %rbp)
+		prefetch( 32(%rsi, %rbp))
 	paddd	96(%rsp), %xmm2
-		prefetcht0 64(%rsi, %rbp)
+		prefetch( 64(%rsi, %rbp))
 	paddd	112(%rsp), %xmm3
-		prefetcht0 96(%rsi, %rbp)
+		prefetch( 96(%rsi, %rbp))
 	paddd	128+64(%rsp), %xmm8
 	paddd	128+80(%rsp), %xmm9
 	paddd	128+96(%rsp), %xmm10
@@ -2342,13 +2348,13 @@ scrypt_core_3way_xmm_loop2:
 	andl	%r8d, %ebx
 	leaq	1(%rbx, %rbx, 2), %rbx
 	shll	$7, %ebx
-		prefetcht0 0(%rsi, %rbx)
+		prefetch( 0(%rsi, %rbx))
 	movdqa	%xmm8, 128+64(%rsp)
-		prefetcht0 32(%rsi, %rbx)
+		prefetch( 32(%rsi, %rbx))
 	movdqa	%xmm9, 128+80(%rsp)
-		prefetcht0 64(%rsi, %rbx)
+		prefetch( 64(%rsi, %rbx))
 	movdqa	%xmm10, 128+96(%rsp)
-		prefetcht0 96(%rsi, %rbx)
+		prefetch( 96(%rsi, %rbx))
 	movdqa	%xmm11, 128+112(%rsp)
 	movdqa	%xmm12, 256+64(%rsp)
 	movdqa	%xmm13, 256+80(%rsp)
@@ -2776,19 +2782,19 @@ scrypt_core_6way_avx2_loop1:
 	andl	%r11d, %ebp
 	leaq	0(%rbp, %rbp, 2), %rbp
 	shll	$8, %ebp
-		prefetcht0 0*32(%rsi, %rbp)
-		prefetcht0 2*32(%rsi, %rbp)
-		prefetcht0 4*32(%rsi, %rbp)
-		prefetcht0 6*32(%rsi, %rbp)
+		prefetch( 0*32(%rsi, %rbp))
+		prefetch( 2*32(%rsi, %rbp))
+		prefetch( 4*32(%rsi, %rbp))
+		prefetch( 6*32(%rsi, %rbp))
 
 	vmovd	%xmm4, %r8d
 	andl	%r11d, %r8d
 	leaq	0(%r8, %r8, 2), %r8
 	shll	$8, %r8d
-		prefetcht0 0*32+16(%rsi, %r8)
-		prefetcht0 2*32+16(%rsi, %r8)
-		prefetcht0 4*32+16(%rsi, %r8)
-		prefetcht0 6*32+16(%rsi, %r8)
+		prefetch( 0*32+16(%rsi, %r8))
+		prefetch( 2*32+16(%rsi, %r8))
+		prefetch( 4*32+16(%rsi, %r8))
+		prefetch( 6*32+16(%rsi, %r8))
 
 scrypt_core_6way_avx2_loop2:
 		vextracti128	$1, %ymm12, %xmm6
@@ -2796,19 +2802,19 @@ scrypt_core_6way_avx2_loop2:
 		andl	%r11d, %eax
 		leaq	2(%rax, %rax, 2), %rax
 		shll	$8, %eax
-			prefetcht0 0*32(%rsi, %rax)
-			prefetcht0 2*32(%rsi, %rax)
-			prefetcht0 4*32(%rsi, %rax)
-			prefetcht0 6*32(%rsi, %rax)
+			prefetch( 0*32(%rsi, %rax))
+			prefetch( 2*32(%rsi, %rax))
+			prefetch( 4*32(%rsi, %rax))
+			prefetch( 6*32(%rsi, %rax))
 
 		vmovd	%xmm6, %r10d
 		andl	%r11d, %r10d
 		leaq	2(%r10, %r10, 2), %r10
 		shll	$8, %r10d
-			prefetcht0 0*32+16(%rsi, %r10)
-			prefetcht0 2*32+16(%rsi, %r10)
-			prefetcht0 4*32+16(%rsi, %r10)
-			prefetcht0 6*32+16(%rsi, %r10)
+			prefetch( 0*32+16(%rsi, %r10))
+			prefetch( 2*32+16(%rsi, %r10))
+			prefetch( 4*32+16(%rsi, %r10))
+			prefetch( 6*32+16(%rsi, %r10))
 
 		vextracti128	$1, %ymm8, %xmm5
 		vmovd	%xmm8, %ebx
@@ -2828,19 +2834,19 @@ scrypt_core_6way_avx2_loop2:
 		andl	%r11d, %ebx
 		leaq	1(%rbx, %rbx, 2), %rbx
 		shll	$8, %ebx
-			prefetcht0 0*32(%rsi, %rbx)
-			prefetcht0 2*32(%rsi, %rbx)
-			prefetcht0 4*32(%rsi, %rbx)
-			prefetcht0 6*32(%rsi, %rbx)
+			prefetch( 0*32(%rsi, %rbx))
+			prefetch( 2*32(%rsi, %rbx))
+			prefetch( 4*32(%rsi, %rbx))
+			prefetch( 6*32(%rsi, %rbx))
 
 		vmovd	%xmm5, %r9d
 		andl	%r11d, %r9d
 		leaq	1(%r9, %r9, 2), %r9
 		shll	$8, %r9d
-			prefetcht0 0*32+16(%rsi, %r9)
-			prefetcht0 2*32+16(%rsi, %r9)
-			prefetcht0 4*32+16(%rsi, %r9)
-			prefetcht0 6*32+16(%rsi, %r9)
+			prefetch( 0*32+16(%rsi, %r9))
+			prefetch( 2*32+16(%rsi, %r9))
+			prefetch( 4*32+16(%rsi, %r9))
+			prefetch( 6*32+16(%rsi, %r9))
 
 	vmovdqa	0*32(%rsi, %rbp), %xmm4
 	vinserti128	$1, 0*32+16(%rsi, %r8), %ymm4, %ymm4
@@ -2995,19 +3001,19 @@ scrypt_core_6way_avx2_loop2:
 		andl	%r11d, %ebp
 		leaq	0(%rbp, %rbp, 2), %rbp
 		shll	$8, %ebp
-			prefetcht0 0*32(%rsi, %rbp)
-			prefetcht0 2*32(%rsi, %rbp)
-			prefetcht0 4*32(%rsi, %rbp)
-			prefetcht0 6*32(%rsi, %rbp)
+			prefetch( 0*32(%rsi, %rbp))
+			prefetch( 2*32(%rsi, %rbp))
+			prefetch( 4*32(%rsi, %rbp))
+			prefetch( 6*32(%rsi, %rbp))
 
 		vmovd	%xmm4, %r8d
 		andl	%r11d, %r8d
 		leaq	0(%r8, %r8, 2), %r8
 		shll	$8, %r8d
-			prefetcht0 0*32+16(%rsi, %r8)
-			prefetcht0 2*32+16(%rsi, %r8)
-			prefetcht0 4*32+16(%rsi, %r8)
-			prefetcht0 6*32+16(%rsi, %r8)
+			prefetch( 0*32+16(%rsi, %r8))
+			prefetch( 2*32+16(%rsi, %r8))
+			prefetch( 4*32+16(%rsi, %r8))
+			prefetch( 6*32+16(%rsi, %r8))
 	vpaddd	1*256+4*32(%rsp), %ymm8, %ymm8
 	vpaddd	2*256+4*32(%rsp), %ymm12, %ymm12
 
