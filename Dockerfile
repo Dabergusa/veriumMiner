@@ -5,7 +5,7 @@
 #
 #
 
-FROM		ubuntu:12.10
+FROM		ubuntu:17.10
 MAINTAINER	Guillaume J. Charmes <guillaume@charmes.net>
 
 RUN		apt-get update -qq
@@ -13,13 +13,14 @@ RUN		apt-get update -qq
 RUN		apt-get install -qqy automake
 RUN		apt-get install -qqy libcurl4-openssl-dev
 RUN		apt-get install -qqy git
-RUN		apt-get install -qqy make
+RUN		apt-get install -qqy build-essential
+RUN		apt-get install -qqy libssl-dev
+RUN		apt-get install -qqy libgmp-dev
+RUN   apt-get install -qqy libjansson-dev
 
-RUN		git clone https://github.com/pooler/cpuminer
+RUN		git clone https://github.com/fireworm71/veriumMiner
 
-RUN		cd cpuminer && ./autogen.sh
-RUN		cd cpuminer && ./configure CFLAGS="-O3"
-RUN		cd cpuminer && make
+RUN		cd cpuminer && ./build.sh
 
 WORKDIR		/cpuminer
 ENTRYPOINT	["./cpuminer"]
