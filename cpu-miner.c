@@ -1671,15 +1671,13 @@ static void *miner_thread(void *userdata)
 
 		}
 	}
-
-	if (opt_algo == ALGO_SCRYPT) {
+	
 		scratchbuf = scrypt_buffer_alloc(opt_scrypt_n, mythr->forceThroughput);
 		if (!scratchbuf) {
 			applog(LOG_ERR, "scrypt buffer allocation failed");
 			pthread_mutex_lock(&applog_lock);
 			exit(1);
 		}
-	}
 
 	while (1) {
 		uint64_t hashes_done;
@@ -2270,9 +2268,6 @@ void parse_arg(int key, char *arg)
 	//printf("%d - %c - arg\n", key, key);
 
 	switch(key) {
-		if (!opt_nfactor && opt_algo == ALGO_SCRYPT)
-            opt_nfactor = 19;
-		break;
 	case 'b':
 		p = strstr(arg, ":");
 		if (p) {
@@ -3027,7 +3022,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	applog(LOG_INFO, "%d miner threads started, "
-		"using '%s' algorithm.",
+		"using scrypt algorithm.",
 		opt_n_total_threads,
 		algo_names[opt_algo]);
 
