@@ -877,14 +877,11 @@ static int share_result(int result, struct work *work, const char *reason)
 	else // accepted percent
 		sprintf(suppl, "%.2f%%", 100. * accepted_count / (accepted_count + rejected_count));
 
-	switch (opt_algo) {
-	default:
+	//print accepted hash and accompanying info
 		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.5f", hashrate / 1000.0);
 		applog(LOG_NOTICE, "accepted: %lu/%lu (%s), %s kH/s %s",
 			accepted_count, accepted_count + rejected_count,
 			suppl, s, flag);
-		break;
-	}
 
 	if (reason) {
 		applog(LOG_WARNING, "reject reason: %s", reason);
