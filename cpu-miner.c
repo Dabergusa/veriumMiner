@@ -877,14 +877,11 @@ static int share_result(int result, struct work *work, const char *reason)
 	else // accepted percent
 		sprintf(suppl, "%.2f%%", 100. * accepted_count / (accepted_count + rejected_count));
 
-	switch (opt_algo) {
-	default:
+	//print accepted hash and accompanying info
 		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.5f", hashrate / 1000.0);
 		applog(LOG_NOTICE, "accepted: %lu/%lu (%s), %s kH/s %s",
 			accepted_count, accepted_count + rejected_count,
 			suppl, s, flag);
-		break;
-	}
 
 	if (reason) {
 		applog(LOG_WARNING, "reject reason: %s", reason);
@@ -1674,15 +1671,13 @@ static void *miner_thread(void *userdata)
 
 		}
 	}
-
-	if (opt_algo == ALGO_SCRYPT) {
+	
 		scratchbuf = scrypt_buffer_alloc(opt_scrypt_n, mythr->forceThroughput);
 		if (!scratchbuf) {
 			applog(LOG_ERR, "scrypt buffer allocation failed");
 			pthread_mutex_lock(&applog_lock);
 			exit(1);
 		}
-	}
 
 	while (1) {
 		uint64_t hashes_done;
@@ -2273,9 +2268,6 @@ void parse_arg(int key, char *arg)
 	//printf("%d - %c - arg\n", key, key);
 
 	switch(key) {
-		if (!opt_nfactor && opt_algo == ALGO_SCRYPT)
-            opt_nfactor = 19;
-		break;
 	case 'b':
 		p = strstr(arg, ":");
 		if (p) {
@@ -3030,7 +3022,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	applog(LOG_INFO, "%d miner threads started, "
-		"using '%s' algorithm.",
+		"using scrypt algorithm.",
 		opt_n_total_threads,
 		algo_names[opt_algo]);
 

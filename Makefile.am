@@ -27,9 +27,6 @@ cpuminer_SOURCES = \
 disable_flags =
 
 if USE_ASM
-if ARCH_x86
-   cpuminer_SOURCES += asm/sha2-x86.S asm/scrypt-x86.S asm/aesb-x86.S
-endif
 if ARCH_x86_64
    cpuminer_SOURCES += asm/sha2-x64.S asm/scrypt-x64.S asm/aesb-x64.S
 endif
