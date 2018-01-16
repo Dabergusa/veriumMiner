@@ -2186,17 +2186,12 @@ static void show_version_and_exit(void)
 		" SSE4"
 #elif defined(_M_X64) || defined(__x86_64__)
 		" x64"
-#elif defined(_M_IX86) || defined(__x86__)
-		" x86"
 #else
 		" general use"
 #endif
 		"\n");
 
 	printf(" config features:"
-#if defined(USE_ASM) && defined(__i386__)
-		" i386"
-#endif
 #if defined(USE_ASM) && defined(__x86_64__)
 		" x86_64"
 #endif
