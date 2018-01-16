@@ -20,7 +20,7 @@ RUN   apt-get install -qqy libjansson-dev
 
 RUN		git clone https://github.com/fireworm71/veriumMiner
 
-RUN		cd cpuminer && ./build.sh
+RUN		cd veriumMiner && ./build.sh
 
-WORKDIR		/cpuminer
+WORKDIR		/veriumMiner
 ENTRYPOINT	["./cpuminer"]
