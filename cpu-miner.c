@@ -2174,7 +2174,7 @@ static void show_version_and_exit(void)
 	// Note: if compiled with cpu opts (instruction sets),
 	// the binary is no more compatible with older ones!
 	printf(" compiled for"
-#if defined(__ARM_NEON__)
+#if defined(__ARM_NEON)
 		" ARM NEON"
 #elif defined(__AVX2__)
 		" AVX2"
@@ -2219,12 +2219,12 @@ static void show_version_and_exit(void)
 	defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__)
 		" ARMv5E"
 #endif
-#if defined(__ARM_NEON__)
+#if defined(__ARM_NEON)
 		" NEON"
+#endif
 #endif
 #if defined(__aarch64__)
 		" ARMV8 NEON"
-#endif
 #endif
 		"\n\n");
 	/* dependencies versions */
