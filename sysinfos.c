@@ -27,6 +27,8 @@
  "/sys/class/hwmon/hwmon0/temp2_input"
 #define HWMON_ALT6 \
  "/sys/class/hwmon/hwmon0/device/temp1_input"
+#define HWMON_OPI \
+ "/sys/class/thermal/thermal_zone0/temp"
 
 
 static float linux_cputemp(int core)
@@ -49,6 +51,9 @@ static float linux_cputemp(int core)
 
 	if (!fd)
                 fd = fopen(HWMON_ALT5, "r");
+        
+	if (!fd)
+                fd = fopen(HWMON_OPI, "r");
 
 	if (!fd)
 		return tc;
@@ -64,6 +69,8 @@ static float linux_cputemp(int core)
  "/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_cur_freq"
 #define CPUFREQ_PATH_ALT \
  "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq"
+#define CPUFREQ_PATH_OPI \
+ "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
 
 static uint32_t linux_cpufreq(int core)
 {
@@ -71,11 +78,13 @@ static uint32_t linux_cpufreq(int core)
 	uint32_t freq = 0;
 
 	if (!fd)
-	{
-		fd = fopen(CPUFREQ_PATH_ALT, "r");
-		if (!fd)
-			return freq;
-	}
+	  fd = fopen(CPUFREQ_PATH_ALT, "r");
+	
+	if (!fd)
+	  fd = fopen(CPUFREQ_PATH_OPI, "r");
+	
+	if (!fd)
+	  return freq;	
 
 	if (!fscanf(fd, "%d", &freq))
 		return freq;
