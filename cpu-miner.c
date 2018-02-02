@@ -46,6 +46,7 @@
 #endif
 
 #include "miner.h"
+#include "algo/scrypt.h"
 
 #ifdef WIN32
 #include "compat/winansi.h"
@@ -182,7 +183,7 @@ int opt_api_remote = 0;
 int opt_api_listen = 4048; /* 0 to disable */
 
 unsigned long hash_time = 0;
-unsigned int opt_hash_time_delay = 30; //30 seconds
+unsigned int opt_hash_time_delay = 15; // 15 seconds
 
 #ifdef HAVE_GETOPT_LONG
 #include <getopt.h>
@@ -1672,12 +1673,12 @@ static void *miner_thread(void *userdata)
 		}
 	}
 	
-		scratchbuf = scrypt_buffer_alloc(opt_scrypt_n, mythr->forceThroughput);
-		if (!scratchbuf) {
-			applog(LOG_ERR, "scrypt buffer allocation failed");
-			pthread_mutex_lock(&applog_lock);
-			exit(1);
-		}
+	scratchbuf = scrypt_buffer_alloc(opt_scrypt_n, mythr->forceThroughput);
+	if (!scratchbuf) {
+		applog(LOG_ERR, "scrypt buffer allocation failed");
+		pthread_mutex_lock(&applog_lock);
+		exit(1);
+	}
 
 	while (1) {
 		uint64_t hashes_done;
@@ -1830,7 +1831,7 @@ static void *miner_thread(void *userdata)
                 hashes_done / (diff.tv_sec + diff.tv_usec * 1e-6);
 			pthread_mutex_unlock(&stats_lock);
 		}
-        if (thr_id == opt_n_total_threads - 1 && (unsigned long)time(NULL) > hash_time) {
+		if (thr_id == opt_n_total_threads - 1 && (unsigned long)time(NULL) > hash_time) {
 			hash_time = (unsigned long)time(NULL) + (unsigned long)opt_hash_time_delay;
 			double hashrate = 0.;
 			for (i = 0; i < opt_n_total_threads && thr_hashrates[i]; i++)
@@ -2997,6 +2998,8 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 	}
+
+	init_scrypt_alloc_sys();
 
 	/* start mining threads */
 	for (i = 0; i < opt_n_total_threads; i++) {

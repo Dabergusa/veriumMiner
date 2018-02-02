@@ -1775,6 +1775,54 @@ bool disable_hugepages = false;
 int hugepages_successes = 0;
 int hugepages_fails = 0;
 int hugepages_size_failed = 0;
+
+void init_scrypt_alloc_sys()
+{
+	printf("testing memory system....\n");
+	
+#ifdef __linux__
+	FILE* f = fopen("/sys/kernel/mm/transparent_hugepage/enabled", "r");
+	if (f)
+	{
+		char buff[32];
+		fread(buff, 32, 1, f);
+		fclose(f);
+		if (strstr(buff, "[always]") != NULL)
+		{
+			applog(LOG_DEBUG, "HugePages type: transparent_hugepages\n");
+			disable_hugepages = true;
+		}
+	}
+#elif defined(WIN32)
+		
+	HANDLE           hToken;
+	TOKEN_PRIVILEGES tp;
+	BOOL             status;
+
+	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+		disable_hugepages = true;
+
+	if (!disable_hugepages && !LookupPrivilegeValue(NULL, TEXT("SeLockMemoryPrivilege"), &tp.Privileges[0].Luid))
+		disable_hugepages = true;
+
+	if (!disable_hugepages)
+	{
+		tp.PrivilegeCount = 1;
+		tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+		status = AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
+	}
+
+	if (disable_hugepages || (!status || (GetLastError() != ERROR_SUCCESS)))
+	{
+		applog(LOG_DEBUG, "HugePages: not enabled, view readme for more info!");
+		disable_hugepages = true;
+	}
+
+	CloseHandle(hToken);
+#endif
+}
+
 unsigned char *scrypt_buffer_alloc(int N, int forceThroughput)
 {
 	uint32_t throughput = (forceThroughput == -1 ? scrypt_best_throughput() : forceThroughput);
@@ -1786,61 +1834,35 @@ unsigned char *scrypt_buffer_alloc(int N, int forceThroughput)
 	uint32_t size = throughput * 32 * (N + 1) * sizeof(uint32_t);
 
 #ifdef __linux__
-	pthread_mutex_lock(&alloc_mutex);
-	if (!tested_hugepages)
-	{
-		FILE* f = fopen("/sys/kernel/mm/transparent_hugepage/enabled", "r");
-		if (f)
-		{
-			char buff[32];
-			fread(buff, 32, 1, f);
-			fclose(f);
-			if (strstr(buff, "[always]") != NULL)
-			{
-				applog(LOG_DEBUG, "HugePages type: transparent_hugepages\n");
-				disable_hugepages = true;
-			}
-		}
-		else
-		{
-		}
-		tested_hugepages = true;
-	}
-	pthread_mutex_unlock(&alloc_mutex);
 
 	if (!disable_hugepages)
 	{
 		unsigned char* m_memory = (unsigned char*)(mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0));
 		if (m_memory == MAP_FAILED)
 		{
-			pthread_mutex_lock(&alloc_mutex);
-			hugepages_fails++;
-			hugepages_size_failed += ((size / (2 * 1024 * 1024)) + 1);
-			if( hugepages_successes == 0)
+			__sync_add_and_fetch(&hugepages_fails, 1);
+			__sync_add_and_fetch(&hugepages_size_failed, ((size / (2 * 1024 * 1024)) + 1));
+			if (hugepages_successes == 0)
 			{
-				if (!printed)
+				if (__sync_bool_compare_and_swap(&printed, false, true))
 				{
 					applog(LOG_DEBUG, "HugePages unavailable (%d)\n", errno);
-					printed = true;
 				}
 			}
 			else
 			{
 				applog(LOG_INFO, "HugePages too small! (%d success, %d fail)\n\tNeed at most %d more hugepages\n", hugepages_successes, hugepages_fails, hugepages_size_failed);
 			}
-			pthread_mutex_unlock(&alloc_mutex);
+
 			m_memory = (unsigned char*)malloc(size);
 		}
 		else
 		{
-			pthread_mutex_lock(&alloc_mutex);
-			if (!printed)
+			if (__sync_bool_compare_and_swap(&printed, false, true))
 			{
-				printed = true;
 				applog(LOG_DEBUG, "HugePages type: preallocated\n");
 			}
-			hugepages_successes++;
-			pthread_mutex_unlock(&alloc_mutex);
+			__sync_add_and_fetch(&hugepages_successes, 1);
 		}
 		return m_memory;
 	}
@@ -1850,40 +1872,7 @@ unsigned char *scrypt_buffer_alloc(int N, int forceThroughput)
 	}
 #elif defined(WIN32)
 
-	pthread_mutex_lock(&alloc_mutex);
-	if (!tested_hugepages)
-	{
-		tested_hugepages = true;
-		
-		HANDLE           hToken;
-		TOKEN_PRIVILEGES tp;
-		BOOL             status;
-
-		if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
-			disable_hugepages = true;
-
-		if (!disable_hugepages && !LookupPrivilegeValue(NULL, TEXT("SeLockMemoryPrivilege"), &tp.Privileges[0].Luid))
-			disable_hugepages = true;
-
-		if (!disable_hugepages)
-		{
-			tp.PrivilegeCount = 1;
-			tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-			status = AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
-		}
-
-		if (disable_hugepages || (!status || (GetLastError() != ERROR_SUCCESS)))
-		{
-			applog(LOG_DEBUG, "HugePages: not enabled, view readme for more info!");
-			disable_hugepages = true;
-		}
-
-		CloseHandle(hToken);
-	}
-	pthread_mutex_unlock(&alloc_mutex);
-
-	if (tested_hugepages && !disable_hugepages)
+	if (!disable_hugepages)
 	{   
 		int size = N * scrypt_best_throughput() * 128;
 		SIZE_T iLargePageMin = GetLargePageMinimum();
