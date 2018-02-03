@@ -119,7 +119,15 @@ static unsigned int opt_nfactor = 6;
 int opt_n_default_threads = 0;
 int opt_n_oneway_threads = 0;
 int opt_n_total_threads = 0;
-int use_affinity_mask = 0; // default to 'maybe'
+
+enum AffinityMode
+{
+  AFF_Auto, // each thread to each cpu
+  AFF_Mask, // each thread to a bunch of cpus
+  AFF_Stride, // each thread to each cpu, with offsets, and strides
+  AFF_None, // do not bind any threads to any cpus.
+};
+enum AffinityMode affinity_mode = AFF_Auto; 
 int64_t opt_affinity_mask_default = 0L;
 int64_t opt_affinity_mask_oneway = 0L;
 int opt_default_priority = 0;
@@ -1619,57 +1627,45 @@ static void *miner_thread(void *userdata)
 
 	/* Cpu thread affinity */
 	if (num_cpus > 1) {
-		if (num_cpus > 64 && use_affinity_mask == 1) {
+		if (num_cpus > 64 && affinity_mode == AFF_Mask) {
 			applog(LOG_WARNING, "NUMBER OF CPUS IS GREATER THAN 64, --cpu-affinity will be wrong!\n"
 				"Use --cpu-affinity-stride + --cpu-affinity-default-index.");
 		}
 
-		if (use_affinity_mask == 1) {
-			if (thr_id >= opt_n_default_threads)
-			{
-				if (opt_affinity_mask_oneway == -1 && opt_n_total_threads > 1) {
-					if (opt_debug)
-						applog(LOG_DEBUG, "Binding onway thread %d to cpu %d (mask %x)", thr_id, thr_id % num_cpus, (1 << (thr_id % num_cpus)));
-					affine_to_cpu_mask(thr_id, 1UL << (thr_id % num_cpus));
-				} else if (opt_affinity_mask_oneway != -1L) {
-					if (opt_debug)
-						applog(LOG_DEBUG, "Binding oneway thread %d to cpu mask %x", thr_id, opt_affinity_mask_oneway);
-					affine_to_cpu_mask(thr_id, (unsigned long)opt_affinity_mask_oneway);
-				}
-			}
-			else
-			{
-				if (opt_affinity_mask_default == -1 && opt_n_total_threads > 1) {
-					if (opt_debug)
-						applog(LOG_DEBUG, "Binding thread %d to cpu %d (mask %x)", thr_id, thr_id % num_cpus, (1 << (thr_id % num_cpus)));
-					affine_to_cpu_mask(thr_id, 1UL << (thr_id % num_cpus));
-				} else if (opt_affinity_mask_default != -1L) {
-					if (opt_debug)
-						applog(LOG_DEBUG, "Binding thread %d to cpu mask %x", thr_id, opt_affinity_mask_default);
-					affine_to_cpu_mask(thr_id, (unsigned long)opt_affinity_mask_default);
-				}
+		if (affinity_mode == AFF_Mask) {
+			bool is_oneway = (thr_id >= opt_n_default_threads);
+
+			unsigned long mask = is_oneway ? opt_affinity_mask_oneway : opt_affinity_mask_default;
+			
+			if (opt_debug)
+				applog(LOG_DEBUG, "Binding %s thread %d to cpu mask %x", is_oneway ?  "oneway" : "defaultway", thr_id, mask);
+			affine_to_cpu_mask(thr_id, mask);
+		}
+		else if (affinity_mode == AFF_Auto) {
+			if (opt_n_total_threads > 1) {
+				if (opt_debug)
+					applog(LOG_DEBUG, "Binding thread %d to cpu %d (mask %x)", thr_id, thr_id % num_cpus, (1 << (thr_id % num_cpus)));
+				affine_to_cpu_mask(thr_id, 1UL << (thr_id % num_cpus));
 			}
 		}
-		else if (use_affinity_mask != 0) {
-			#ifndef __linux__
-				if (num_cpus > 64 && use_affinity_mask == 1) {
-					applog(LOG_WARNING, "NUMBER OF CPUS IS GREATER THAN 64, --cpu-affinity will be wrong!\n"
-						"Use --cpu-affinity-stride + --cpu-affinity-default-index.");
-				}
-				uint64_t cpu_index = thread_affinty_array[thr_id];
-				cpu_index %= num_cpus;
-				uint64_t mask = 1UL << cpu_index;
-				if (opt_debug)
-					applog(LOG_DEBUG, "Binding thread %d to cpu mask %x",  thr_id, mask);
-				affine_to_cpu_mask(thr_id, (unsigned long)mask);
-			#else
-				uint64_t cpu_index = thread_affinty_array[thr_id];
-				cpu_index %= num_cpus;
-				applog(LOG_DEBUG, "Binding thread %d to cpu index %x",  thr_id, cpu_index);
-				affine_to_cpu(thr_id, cpu_index);
+		else if (affinity_mode == AFF_Stride) {
+		#ifndef __linux__
+			if (num_cpus > 64) {
+				applog(LOG_WARNING, "NUMBER OF CPUS IS GREATER THAN 64, unfortunately, our code doesn't support this!");
+			}
+			uint64_t cpu_index = thread_affinty_array[thr_id];
+			cpu_index %= num_cpus;
+			uint64_t mask = 1UL << cpu_index;
+			if (opt_debug)
+				applog(LOG_DEBUG, "Binding thread %d to cpu mask %x",  thr_id, mask);
+			affine_to_cpu_mask(thr_id, (unsigned long)mask);
+		#else
+			uint64_t cpu_index = thread_affinty_array[thr_id];
+			cpu_index %= num_cpus;
+			applog(LOG_DEBUG, "Binding thread %d to cpu index %x",  thr_id, cpu_index);
+			affine_to_cpu(thr_id, cpu_index);
 
-			#endif // #ifdef __linux__
-
+		#endif // #ifdef __linux__
 		}
 	}
 	
@@ -2531,7 +2527,7 @@ void parse_arg(int key, char *arg)
 		use_colors = false;
 		break;
 	case 1020:
-		if (use_affinity_mask == -1){
+		if (affinity_mode == AFF_Stride){
 			applog(LOG_ERR, "BOTH --cpu-affinity and --cpu-affinity-stride have been defined!  Pick one or the other!");
 			show_usage_and_exit(1);
 		}
@@ -2544,10 +2540,10 @@ void parse_arg(int key, char *arg)
 		if (ul > (1UL<<num_cpus)-1)
 			ul = -1;
 		opt_affinity_mask_default = ul;
-		use_affinity_mask = 1;
+		affinity_mode = AFF_Mask;
 		break;
 	case 1023: // '--cpu-affinity-oneway'
-		if (use_affinity_mask == -1){
+		if (affinity_mode == AFF_Stride){
 			applog(LOG_ERR, "BOTH --cpu-affinity and --cpu-affinity-stride have been defined!  Pick one or the other!");
 			show_usage_and_exit(1);
 		}
@@ -2560,7 +2556,7 @@ void parse_arg(int key, char *arg)
 		if (ul > (1UL<<num_cpus)-1)
 			ul = -1;
 		opt_affinity_mask_oneway = ul;
-		use_affinity_mask = 1;
+		affinity_mode = AFF_Mask;
 		break;
 	case 1021:
 		v = atoi(arg);
@@ -2597,17 +2593,17 @@ void parse_arg(int key, char *arg)
 		break;
 	case 1050: // cpu-affinity-stride
 		v = atoi(arg);
-		if (use_affinity_mask == 1){
+		if (affinity_mode == AFF_Mask){
 			applog(LOG_ERR, "BOTH --cpu-affinity and --cpu-affinity-stride have been defined!  Pick one or the other!");
 			show_usage_and_exit(1);
 		}
 		if (v < 0 || v > 9999) /* sanity check */
 			show_usage_and_exit(1);
 		opt_affinity_stride = v;
-		use_affinity_mask = -1;
+		affinity_mode = AFF_Stride;
 		break;	
 	case 1051: // "cpu-affinity-default-index"
-		if (use_affinity_mask == 1){
+		if (affinity_mode == AFF_Mask){
 			applog(LOG_ERR, "BOTH --cpu-affinity and --cpu-affinity-stride have been defined!  Pick one or the other!");
 			show_usage_and_exit(1);
 		}
@@ -2615,10 +2611,10 @@ void parse_arg(int key, char *arg)
 		if (v < 0 || v > 9999) /* sanity check */
 			show_usage_and_exit(1);
 		opt_affinity_default_index = v;
-		use_affinity_mask = -1;
+		affinity_mode = AFF_Stride;
 		break;	
 	case 1052: // "cpu-affinity-oneway-index"
-		if (use_affinity_mask == 1){
+		if (affinity_mode == AFF_Mask){
 			applog(LOG_ERR, "BOTH --cpu-affinity and --cpu-affinity-stride have been defined!  Pick one or the other!");
 			show_usage_and_exit(1);
 		}
@@ -2626,7 +2622,7 @@ void parse_arg(int key, char *arg)
 		if (v < 0 || v > 9999) /* sanity check */
 			show_usage_and_exit(1);
 		opt_affinity_oneway_index = v;
-		use_affinity_mask = -1;
+		affinity_mode = AFF_Stride;
 		break;	
 	case 2000: // "ryzen"
 		opt_ryzen_1x = true;
@@ -2885,7 +2881,7 @@ int main(int argc, char *argv[]) {
 		SetPriorityClass(GetCurrentProcess(), prio);
 	}
 #endif
-	if (opt_affinity_mask_default != -1 && opt_affinity_mask_default != 0 && use_affinity_mask == 1) {
+	if (opt_affinity_mask_default != -1 && opt_affinity_mask_default != 0 && affinity_mode == AFF_Mask) {
 		if (!opt_quiet)
 			applog(LOG_DEBUG, "Binding process to cpu mask %x", opt_affinity_mask_default | opt_affinity_mask_oneway);
 		affine_to_cpu_mask(-1, (unsigned long)(opt_affinity_mask_default | opt_affinity_mask_oneway) );
@@ -2895,7 +2891,7 @@ int main(int argc, char *argv[]) {
 	if (use_syslog)
 		openlog("cpuminer", LOG_PID, LOG_USER);
 #endif
-	if (use_affinity_mask != 1) {
+	if (affinity_mode == AFF_Stride || affinity_mode == AFF_Auto) {
 		thread_affinty_array = calloc(opt_n_total_threads, sizeof(int));
 		// threads ids are allocated in this order, so do affinity in this order too.
 		// [default way threads] [one way threads]
