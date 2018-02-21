@@ -29,6 +29,8 @@
  "/sys/class/hwmon/hwmon0/device/temp1_input"
 #define HWMON_OPI \
  "/sys/class/thermal/thermal_zone0/temp"
+#define HWMON_ARMBIAN \
+ "/etc/armbianmonitor/datasources/soctemp"
 
 
 static float linux_cputemp(int core)
@@ -54,6 +56,9 @@ static float linux_cputemp(int core)
         
 	if (!fd)
                 fd = fopen(HWMON_OPI, "r");
+	
+	if (!fd)
+                fd = fopen(HWMON_ARMBIAN, "r");
 
 	if (!fd)
 		return tc;
